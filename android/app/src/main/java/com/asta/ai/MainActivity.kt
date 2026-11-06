@@ -25,6 +25,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -100,6 +101,7 @@ private fun AstaApp() {
                             modifier = Modifier.fillMaxWidth(),
                             label = { Text("Private access token") },
                             singleLine = true,
+                            visualTransformation = PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                         )
                         Text("Keep your token private. Use a trusted HTTPS server.", color = Muted, fontSize = 11.sp)
