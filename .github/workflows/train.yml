@@ -22,5 +22,12 @@ jobs:
       - name: Run automated tests
         run: python -m unittest discover -s tests -v
 
-      - name: Train the starter model
+      - name: Train or continue training the model
         run: python brain/trainer.py
+
+      - name: Save trained model as a downloadable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: asta-ai-trained-model
+          path: models/xor_model.json
+          if-no-files-found: error
