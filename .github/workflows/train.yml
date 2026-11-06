@@ -1,10 +1,7 @@
 name: ASTA_AI - Train and Test
 
+# Paused during development. Run manually from the Actions tab when ASTA_AI is ready.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,33 +10,24 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Run automated tests
         run: python -m unittest discover -s tests -v
-
       - name: Train logic brain
         run: python brain/trainer.py
-
       - name: Train text brain
         run: python brain/text_trainer.py
-
       - name: Train experimental phrase generator
         run: python brain/text_generator.py
-
       - name: Train general neural language model
         run: python brain/language_trainer.py
-
       - name: Validate and index Python coding lessons
         run: python brain/code_trainer.py
-
       - name: Validate and index Python code patterns
         run: python brain/code_pattern_trainer.py
-
       - name: Save trained models as a downloadable artifact
         uses: actions/upload-artifact@v4
         with:
