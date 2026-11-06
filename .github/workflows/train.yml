@@ -34,6 +34,9 @@ jobs:
       - name: Validate and index Python coding lessons
         run: python brain/code_trainer.py
 
+      - name: Validate and index Python code patterns
+        run: python brain/code_pattern_trainer.py
+
       - name: Save trained models as a downloadable artifact
         uses: actions/upload-artifact@v4
         with:
