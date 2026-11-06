@@ -1,0 +1,23 @@
+Hello there.
+Hello ASTA AI.
+Good morning.
+Good afternoon.
+How are you today?
+I am learning new words.
+I can learn from examples.
+A neural network learns patterns from data.
+Python is a programming language.
+I am a small experimental language generator.
+I can create a phrase from patterns I have seen.
+Training data helps me learn.
+Please teach me with clear examples.
+I am still learning how language works.
+Thank you for helping me learn.
+You are welcome.
+What is your name?
+My name is ASTA AI.
+I like learning about computers.
+Computers can run programs.
+A program follows instructions.
+I do not know everything.
+I may create sentences that do not make sense.
