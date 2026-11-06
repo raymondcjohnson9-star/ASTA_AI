@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,10 +44,18 @@ class AssistantCoreTests(unittest.TestCase):
         self.assertEqual(result["action"], "python_lesson")
         self.assertIn("For and while loops", result["answer"])
 
-    def test_research_mode_selected_without_network(self):
-        result = self.core.handle("research latest science news")
+    def test_research_mode_selected_and_search_is_called(self):
+        with patch("assistant_core.search_web", return_value=[]) as search:
+            result = self.core.handle("research latest science news")
         self.assertEqual(result["workspace"]["mode"], "research")
-        self.assertIn(result["action"], {"web_search", "web_search_failed"})
+        self.assertEqual(result["action"], "web_search")
+        search.assert_called_once()
+
+    def test_current_lesson_answer_is_only_shown_on_request(self):
+        self.core.handle("Teach me Python loops")
+        result = self.core.handle("show the answer")
+        self.assertEqual(result["action"], "lesson_answer")
+        self.assertIn("range(1, 6)", result["answer"])
 
 if __name__ == "__main__":
     unittest.main()
