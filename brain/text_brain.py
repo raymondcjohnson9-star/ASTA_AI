@@ -2,7 +2,10 @@
 import json
 import re
 from pathlib import Path
-from neural_network import NeuralNetwork
+try:
+    from .neural_network import NeuralNetwork
+except ImportError:  # Supports running trainers directly from the brain folder.
+    from neural_network import NeuralNetwork
 
 def tokenize(text):
     return re.findall(r"[a-z0-9']+", text.lower())
