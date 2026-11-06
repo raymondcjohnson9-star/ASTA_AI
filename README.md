@@ -208,3 +208,59 @@ ASTA_AI does not silently collect chat history or habits.
 This is a first orchestration layer, not a ChatGPT-level model. General open-ended
 conversation remains limited, web search depends on the public search provider, and
 the adaptive workspace metadata still needs a real Android frontend to render it.
+
+
+## Optional general language-model connection
+
+The unified assistant can now call an external chat model through
+`brain/language_engine.py`. This adds open-ended language generation while
+keeping ASTA's existing Python lessons, research routing, decision tools, and
+explicit memory commands.
+
+**No model is bundled with this repository.** The language adapter is a connector,
+not a trained foundation model. Its quality depends on the model you install or
+connect. The assistant sends the current request, up to four recent conversation
+turns, and explicitly saved notes to the configured model. Do not save passwords,
+private keys, or other secrets in ASTA memory.
+
+### Option A: local Ollama server (no hosted API key)
+
+1. Install Ollama on a computer that can run a model, then download a chat model
+   supported by your computer.
+2. Start the Ollama server and make sure the model is available locally.
+3. Set these environment variables in the environment where ASTA_AI runs:
+
+```bash
+ASTA_LLM_PROVIDER=ollama
+ASTA_LLM_BASE_URL=http://127.0.0.1:11434
+ASTA_LLM_MODEL=your-installed-model-name
+python brain/assistant_cli.py
+```
+
+Replace `your-installed-model-name` with the exact model name shown by Ollama.
+If ASTA runs on a different device from the Ollama server, use the server
+computer's reachable LAN address instead of `127.0.0.1`, and only expose the
+server on a trusted network.
+
+### Option B: hosted OpenAI-compatible service
+
+Set `ASTA_LLM_PROVIDER=openai`, `ASTA_LLM_BASE_URL` to the provider's API base,
+`ASTA_LLM_MODEL` to a model name supported by that provider, and
+`ASTA_LLM_API_KEY` in a private environment variable or secret store.
+Never commit an API key to this repository or paste it into chat. Hosted model
+usage may cost money according to the provider's pricing.
+
+### Important limitations
+
+- If no provider is configured, ASTA keeps using its existing local tools and
+  clearly reports that a general language model is not connected.
+- Local Ollama inference needs a separate computer/server with enough memory and
+  processing power for the chosen model. A GitHub repository or GitHub Actions
+  workflow does not host the model for the Android phone.
+- This repository is still a Python command-line prototype, not an Android app.
+  The model adapter must later be connected to an Android frontend through a
+  secure backend or a supported on-device inference runtime.
+- Model answers can be wrong. Verify important facts, especially changing
+  information. The web research tool remains a separate explicit tool.
+- The adapter does not train or modify the model weights. Personalization memory
+  and model training are different things.
