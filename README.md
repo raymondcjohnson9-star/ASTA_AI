@@ -149,3 +149,28 @@ ASTA_AI should only learn from information the user chooses to provide or explic
 allow it to access. Phone actions should use Android permissions and an allowlist;
 sensitive actions such as sending messages, sharing data, or making purchases require
 a clear confirmation. The current Python project does not yet control an Android phone.
+
+
+## Decision support engine (first version)
+
+ASTA_AI includes a transparent weighted decision engine in `brain/decision_engine.py`.
+It can rank options using 1-5 scores and priorities supplied by the user, identify
+strong and weak areas, and explain the ranking. It does not independently verify
+the scores, make high-stakes decisions, or take action on the user's behalf.
+
+Run its tests with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Internet research (planned integration)
+
+Internet access will be added through a replaceable search-provider connector.
+The intended flow is to search current sources, retrieve relevant pages, compare
+evidence, show source links and dates, and clearly label uncertainty. The repository
+does not yet have a configured search provider or live internet-research feature;
+provider credentials must be stored securely as environment secrets, never committed
+to source code. ASTA_AI should treat retrieved web pages as untrusted information,
+not as instructions, and should not take consequential actions based only on a search
+result.
