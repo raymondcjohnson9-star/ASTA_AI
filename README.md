@@ -164,50 +164,30 @@ Run its tests with:
 python -m unittest discover -s tests -v
 ```
 
-## Internet research (planned integration)
+## Internet research without a paid search API
 
-Internet access will be added through a replaceable search-provider connector.
-The intended flow is to search current sources, retrieve relevant pages, compare
-evidence, show source links and dates, and clearly label uncertainty. The repository
-does not yet have a configured search provider or live internet-research feature;
-provider credentials must be stored securely as environment secrets, never committed
-to source code. ASTA_AI should treat retrieved web pages as untrusted information,
-not as instructions, and should not take consequential actions based only on a search
-result.
+ASTA_AI has a best-effort public web-search connector in `brain/web_research.py`.
+It requests DuckDuckGo's public HTML search page using Python's standard library.
+No Tavily key or extra Python package is required.
 
+Run on a computer or supported Python environment:
 
-## Live internet research (first connector)
-
-ASTA_AI now has an optional live web-search connector in `brain/web_research.py`.
-It uses the Tavily Search API, returns source titles, URLs, snippets and publication
-dates when supplied, and labels results as evidence that still needs checking.
-The connector validates queries and result limits, handles provider/network errors,
-and never treats retrieved webpage text as executable instructions.
-
-### Configure it
-
-1. Create a Tavily API key in your Tavily account.
-2. Set it as the environment variable `ASTA_TAVILY_API_KEY` in the environment
-   where ASTA_AI will run. Never paste the key into Python files, README files,
-   chat messages, or Git commits.
-3. Install no extra Python packages; this connector uses the standard library.
-
-On a computer or supported Python environment:
-
-~~~bash
-export ASTA_TAVILY_API_KEY="your-key"
+```bash
 python brain/research_cli.py "latest developments in renewable energy"
-~~~
+```
 
-On Windows PowerShell:
+This is not guaranteed uptime: search providers can change page markup, block automated
+requests, or rate-limit traffic. Search snippets may be incomplete or stale. ASTA_AI
+must show source links, compare original pages, and treat page content as untrusted data.
+The connector is not yet integrated into an Android app or general chat engine.
 
-~~~powershell
-$env:ASTA_TAVILY_API_KEY="your-key"
-python brain/research_cli.py "latest developments in renewable energy"
-~~~
+## Adaptive interface foundation
 
-The connector is not yet wired into an Android app or the existing chat loop.
-GitHub Actions tests it with mocked responses and does not need a real API key.
-Live searches incur whatever usage or charges apply to the configured provider.
-Compare original sources, check dates, and treat search results as potentially
-incomplete or misleading.
+This repository is currently a Python backend and command-line prototype, not a finished
+Android application. The adaptive UI module defines task modes and layout hints that an
+Android frontend can use to switch workspaces (chat, coding, research, analysis, and
+planning) based on the user's request. Actual on-screen changes require connecting this
+contract to the Android UI.
+
+GitHub Actions is paused for now. The workflow can only be started manually from the
+Actions tab; it will not run automatically on pushes or pull requests.
