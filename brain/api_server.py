@@ -73,8 +73,9 @@ def main():
     token = os.getenv("ASTA_API_TOKEN", "")
     if len(token) < 24:
         raise SystemExit("Set ASTA_API_TOKEN to a random secret of at least 24 characters.")
-    host = os.getenv("ASTA_API_HOST", "127.0.0.1")
-    port = int(os.getenv("ASTA_API_PORT", "8765"))
+    host = os.getenv("ASTA_API_HOST", "0.0.0.0")
+    # Render supplies PORT (normally 10000); local runs keep the familiar 8765 default.
+    port = int(os.getenv("PORT", os.getenv("ASTA_API_PORT", "8765")))
     server = ThreadingHTTPServer((host, port), AstaHandler)
     print(f"ASTA_AI API listening on {host}:{port}")
     print("Use HTTPS through a trusted reverse proxy before exposing this server to the internet.")
