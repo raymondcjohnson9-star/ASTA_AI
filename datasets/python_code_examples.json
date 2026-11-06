@@ -1,0 +1,72 @@
+[
+  {
+    "id": "for-loop",
+    "title": "For loop",
+    "description": "Repeats a block for each item in a sequence.",
+    "code": "for name in names:\n    print(name)",
+    "tags": [
+      "for",
+      "loop",
+      "iteration",
+      "list"
+    ]
+  },
+  {
+    "id": "while-loop",
+    "title": "While loop",
+    "description": "Repeats while a condition remains true.",
+    "code": "count = 0\nwhile count < 3:\n    print(count)\n    count += 1",
+    "tags": [
+      "while",
+      "loop",
+      "condition"
+    ]
+  },
+  {
+    "id": "function",
+    "title": "Function",
+    "description": "A reusable block of code defined with def.",
+    "code": "def greet(name):\n    return 'Hello ' + name",
+    "tags": [
+      "function",
+      "def",
+      "return",
+      "parameter"
+    ]
+  },
+  {
+    "id": "if-else",
+    "title": "If and else",
+    "description": "Chooses a path based on a condition.",
+    "code": "if score >= 50:\n    print('Pass')\nelse:\n    print('Try again')",
+    "tags": [
+      "if",
+      "else",
+      "condition",
+      "comparison"
+    ]
+  },
+  {
+    "id": "list",
+    "title": "List",
+    "description": "Stores multiple values in an ordered collection.",
+    "code": "scores = [10, 20, 30]\nscores.append(40)",
+    "tags": [
+      "list",
+      "append",
+      "collection"
+    ]
+  },
+  {
+    "id": "dictionary",
+    "title": "Dictionary",
+    "description": "Stores values using key and value pairs.",
+    "code": "student = {'name': 'Asta', 'age': 15}\nprint(student['name'])",
+    "tags": [
+      "dictionary",
+      "dict",
+      "key",
+      "value"
+    ]
+  }
+]
