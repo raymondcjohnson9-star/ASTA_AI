@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: asta-ai-backend
+    runtime: python
+    plan: free
+    region: frankfurt
+    buildCommand: python -m compileall -q brain
+    startCommand: python brain/api_server.py
+    healthCheckPath: /health
+    autoDeployTrigger: off
+    envVars:
+      - key: ASTA_API_TOKEN
+        generateValue: true
