@@ -27,6 +27,14 @@ class TextBrainTests(unittest.TestCase):
     def test_unknown_words_do_not_crash(self):
         self.assertIn(self.brain.predict("flibbertigibbet")["intent"], self.brain.labels)
 
+    def test_chat_replies_to_known_intents(self):
+        self.assertIn("Hello", self.brain.respond("hello", self.dataset))
+        self.assertIn("welcome", self.brain.respond("thank you", self.dataset))
+
+    def test_chat_asks_about_unknown_words(self):
+        reply = self.brain.respond("qzxvplm", self.dataset)
+        self.assertIn("don't know", reply)
+
     def test_save_and_load(self):
         before = self.brain.predict("thank you")
         with tempfile.TemporaryDirectory() as folder:
