@@ -1,46 +1,57 @@
 # ASTA_AI
 
-A personal machine-learning project built step by step from scratch.
+ASTA_AI is a learning project for building a small AI from the ground up with Python.
 
 ## Current abilities
 
 - A perceptron that learns the AND logic pattern.
-- A small feed-forward neural network with backpropagation.
-- A tiny XOR training dataset.
-- Save and load the network's learned weights.
-- Continue training from a previously saved model.
-- Automated tests and a GitHub Actions training workflow.
+- A feed-forward neural network trained on XOR.
+- A text brain that learns to classify phrases as greetings, questions, thanks, or farewells.
+- Editable training examples, model saving/loading, and automated tests.
 
-## Run it
+This is an early educational model, not a full conversational AI. It recognizes patterns in examples and does not yet understand or generate open-ended language.
 
-Python 3.10 or newer is required. No third-party packages are needed.
+## Train on GitHub
 
-```bash
+1. Open the Actions tab.
+2. Select **ASTA_AI - Train and Test**.
+3. Choose **Run workflow**, or push a commit to main.
+4. Open the completed run and download the asta-ai-trained-model artifact.
+
+The workflow tests and trains both brains, then uploads their saved JSON model files.
+
+## Teach ASTA_AI new phrases
+
+Edit datasets/text_training_data.json. Add phrases inside an existing intent, or create a new intent with several example phrases. Keep the JSON valid: use double quotes and commas between items. Add varied examples that express the same intent.
+
+The vocabulary is built from the dataset, so new words become available when they appear in training phrases. Each workflow run rebuilds the text classifier from the current dataset.
+
+## Run on a computer
+
+Install Python 3.11 or newer, then run:
+
+~~~bash
 python -m unittest discover -s tests -v
 python brain/trainer.py
-```
+python brain/text_trainer.py
+~~~
 
-The trainer saves the model to `models/xor_model.json`. When run again, it loads that file and continues training instead of creating a fresh network.
+The text model is saved at models/asta_text_brain.json. To use it:
 
-## Load the saved model in Python
-
-```python
-from brain.neural_network import NeuralNetwork
-
-model = NeuralNetwork.load("models/xor_model.json")
-print(model.predict([0, 1]))
-```
-
-## Important
-
-This is an educational neural network that learns a tiny mathematical pattern. It is not yet a conversational AI. A useful language model requires much larger datasets, more sophisticated architecture, and substantially more computing resources. We will build toward text learning in later stages.
+~~~python
+from brain.text_brain import TextBrain
+brain = TextBrain.load("models/asta_text_brain.json")
+print(brain.predict("hello there"))
+~~~
 
 ## Project layout
 
-```text
-brain/                  Neural-network code and trainer
-datasets/               Training examples
-models/                 Saved model parameters (created after training)
-tests/                  Automated tests
-.github/workflows/      GitHub Actions automation
-```
+- brain/ — neural network, text classifier, and trainers.
+- datasets/ — examples you can edit to teach the models.
+- tests/ — automatic checks.
+- .github/workflows/ — GitHub Actions training workflow.
+- models/ — generated model files, available from workflow artifacts.
+
+## Important limitation
+
+This version classifies short text into known categories. A conversational language model will require much larger datasets, a language-model training approach, extensive evaluation, and considerably more computing power. We will build toward that in stages.
