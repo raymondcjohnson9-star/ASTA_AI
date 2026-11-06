@@ -264,3 +264,48 @@ usage may cost money according to the provider's pricing.
   information. The web research tool remains a separate explicit tool.
 - The adapter does not train or modify the model weights. Personalization memory
   and model training are different things.
+
+
+## Android chat application (first client)
+
+A native Kotlin + Jetpack Compose Android client is in `android/`. It provides
+a dark chat screen, connection settings, message bubbles, and sends messages to
+the Python assistant API. The access token field is masked and is held only in
+the app's current session; it is not written to disk.
+
+### Run the ASTA API server
+
+On a trusted server with Python 3.11+, configure a private random token and the
+language model provider. For example, with Ollama running on the same server:
+
+```bash
+export ASTA_API_TOKEN="replace-with-a-long-random-secret"
+export ASTA_LLM_PROVIDER=ollama
+export ASTA_LLM_BASE_URL=http://127.0.0.1:11434
+export ASTA_LLM_MODEL="your-installed-model-name"
+python brain/api_server.py
+```
+
+The API listens on `127.0.0.1:8765` by default. Put it behind a trusted HTTPS
+reverse proxy before connecting from Android. Do not expose the Python HTTP
+server directly to the public internet. The Android client intentionally refuses
+plain HTTP addresses and sends the token as a bearer credential. Keep the token
+private and rotate it if it is exposed.
+
+The API's `/health` endpoint checks whether the server process is running.
+The `/api/chat` endpoint requires the bearer token. A language model must be
+configured on the server for open-ended answers; otherwise ASTA uses its local
+features and explains that no general model is connected.
+
+### Build the Android APK
+
+The separate workflow `ASTA Android APK` is manual-only. When ready, open GitHub
+Actions, select that workflow, and choose **Run workflow**. Download the
+`ASTA-Android-debug` artifact from the completed run. The existing training
+workflow remains manual-only too.
+
+**Current status:** this is an initial Android chat client and authenticated API,
+not a published app. The API still needs deployment to a server with HTTPS, and
+a language model must be installed/configured there. The app does not yet have
+voice input, image uploads, background phone controls, or persistent on-device
+chat history.
