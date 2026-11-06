@@ -25,7 +25,7 @@ class CodeBrain:
                 raise ValueError("Each lesson must include all required fields.")
             # Parse examples, but never execute them.
             ast.parse(lesson["code"])
-            ast.parse(lesson["answer"])
+            # Answers can be plain-language explanations, so only validate the code example.
         return cls(lessons)
 
     def search(self, question):
