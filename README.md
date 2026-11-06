@@ -17,7 +17,7 @@ ASTA_AI is a learning project for building a small AI from the ground up with Py
 
 1. Open the Actions tab.
 2. Select **ASTA_AI - Train and Test**.
-3. Choose **Run workflow**, or push a commit to main.
+3. Choose **Run workflow**. Automatic runs on pushes are disabled while development continues.
 4. Open the completed run and download the `asta-ai-trained-model` artifact.
 
 The workflow runs tests, trains the logic and intent models, trains the phrase generator, validates the Python lesson examples, and packages generated JSON model files. Workflow artifacts are downloadable outputs; they are not automatically saved back into the repository.
