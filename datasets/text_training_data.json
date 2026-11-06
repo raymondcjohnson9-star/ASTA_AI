@@ -1,0 +1,10 @@
+{
+  "name": "ASTA_AI starter language examples",
+  "description": "Add phrases under an intent to teach ASTA_AI how to classify them.",
+  "intents": {
+    "greeting": ["hello", "hi", "hey there", "good morning", "good afternoon", "good evening", "how are you", "what is up"],
+    "question": ["what is your name", "who are you", "what can you do", "how does this work", "can you help me", "tell me something", "where are you from", "why is the sky blue"],
+    "thanks": ["thank you", "thanks", "that helped me", "I appreciate it", "thanks a lot", "you are helpful"],
+    "farewell": ["goodbye", "bye", "see you later", "talk to you soon", "good night", "I have to go"]
+  }
+}
