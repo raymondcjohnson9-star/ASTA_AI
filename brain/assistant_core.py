@@ -18,12 +18,20 @@ from adaptive_ui import choose_workspace
 from user_memory import UserMemory
 from web_research import search_web, format_sources, ResearchError
 from code_brain import CodeBrain
+from decision_engine import recommend, explain_recommendation
 
 class AssistantCore:
     def __init__(self, memory_path=None, lessons_path=None):
         self.memory = UserMemory(memory_path or ROOT / "models" / "user_memory.json")
         self.lessons_path = Path(lessons_path or ROOT / "datasets" / "python_lessons.json")
         self.current_lesson = None
+
+    def compare_options(self, options, weights):
+        ranked = recommend(options, weights)
+        return {
+            "ranking": [{"name": item.name, "score": item.score, "strengths": list(item.strengths), "tradeoffs": list(item.tradeoffs)} for item in ranked],
+            "explanation": explain_recommendation(ranked),
+        }
 
     def handle(self, message):
         """Return a UI mode, answer, sources and explicit action metadata."""
@@ -91,6 +99,11 @@ class AssistantCore:
             except (ResearchError, ValueError) as exc:
                 result["answer"] = f"I couldn't complete the web search: {exc}"
                 result["action"] = "web_search_failed"
+            return result
+
+        if workspace["mode"] == "analysis":
+            result["action"] = "decision_support_ready"
+            result["answer"] = "I can compare options when you provide each option name, 1-5 scores for every criterion, and the importance weight for each criterion. The core exposes compare_options(options, weights). I will not invent scores or make the choice for you."
             return result
 
         if workspace["mode"] == "coding":
