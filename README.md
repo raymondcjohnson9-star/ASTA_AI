@@ -191,3 +191,20 @@ contract to the Android UI.
 
 GitHub Actions is paused for now. The workflow can only be started manually from the
 Actions tab; it will not run automatically on pushes or pull requests.
+
+
+## Unified assistant core (first orchestration version)
+
+The unified entry point is `brain/assistant_core.py`. It routes requests to the
+adaptive workspace selector, Python lesson retrieval, and keyless public web search.
+It returns a structured result containing the workspace, answer, sources, and action.
+The command-line demo is `python brain/assistant_cli.py`.
+
+Memory is opt-in and local: only messages beginning with `remember that` or
+`remember:` are saved to `models/user_memory.json`. Use `show memory`,
+`forget: exact memory text`, or `forget all memories` to inspect or delete it.
+ASTA_AI does not silently collect chat history or habits.
+
+This is a first orchestration layer, not a ChatGPT-level model. General open-ended
+conversation remains limited, web search depends on the public search provider, and
+the adaptive workspace metadata still needs a real Android frontend to render it.
