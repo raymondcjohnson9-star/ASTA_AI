@@ -1,0 +1,10 @@
+{
+  "name": "XOR learning exercise",
+  "description": "Four examples for teaching a small neural network the XOR pattern.",
+  "examples": [
+    {"inputs": [0, 0], "targets": [0]},
+    {"inputs": [0, 1], "targets": [1]},
+    {"inputs": [1, 0], "targets": [1]},
+    {"inputs": [1, 1], "targets": [0]}
+  ]
+}
