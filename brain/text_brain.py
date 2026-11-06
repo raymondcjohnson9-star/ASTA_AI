@@ -53,6 +53,19 @@ class TextBrain:
         return {"intent": self.labels[best], "confidence": round(scores[best], 4),
                 "scores": {label: round(score, 4) for label, score in zip(self.labels, scores)}}
 
+    def respond(self, text, dataset, turn=0):
+        """Choose a prepared reply for the predicted intent, or ask for clarification."""
+        known_words = set(tokenize(text)).intersection(self.word_index)
+        if not known_words:
+            return "I don't know how to answer that yet. You can teach me by adding examples to my training data."
+        result = self.predict(text)
+        if result["confidence"] < 0.55:
+            return "I'm not sure I understood. Could you say that another way?"
+        replies = dataset.get("responses", {}).get(result["intent"], [])
+        if not replies:
+            return "I recognized the message, but I haven't been taught a reply for it yet."
+        return replies[turn % len(replies)]
+
     def save(self, path):
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
