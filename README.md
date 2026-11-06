@@ -97,3 +97,21 @@ GitHub Actions can run the training workflow from your phone's browser, but it i
 ## Next steps
 
 The next serious step toward coding ability is a neural model trained on many carefully selected code examples, followed by evaluation and a safe code-execution sandbox. More lessons alone improve this tutor's coverage, but do not turn it into an autonomous programmer.
+
+
+## Python code-pattern learner
+
+ASTA_AI can inspect Python source without executing it. The pattern learner recognizes
+common structures such as loops, conditions, functions, lists, dictionaries and function
+calls, then retrieves examples with similar syntax structures.
+
+Run it on a computer:
+
+```bash
+python brain/code_pattern_trainer.py
+python -m unittest discover -s tests -v
+```
+
+The example library is editable at `datasets/python_code_examples.json`.
+This is static syntax analysis and example matching, not an autonomous code-writing
+model. It does not execute submitted code or guarantee that a program works.
