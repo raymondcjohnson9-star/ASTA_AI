@@ -23,6 +23,7 @@ class AssistantCore:
     def __init__(self, memory_path=None, lessons_path=None):
         self.memory = UserMemory(memory_path or ROOT / "models" / "user_memory.json")
         self.lessons_path = Path(lessons_path or ROOT / "datasets" / "python_lessons.json")
+        self.current_lesson = None
 
     def handle(self, message):
         """Return a UI mode, answer, sources and explicit action metadata."""
@@ -101,6 +102,7 @@ class AssistantCore:
                 result["action"] = "coding_library_error"
                 return result
             if lesson:
+                self.current_lesson = lesson
                 result["action"] = "python_lesson"
                 result["answer"] = (
                     f"{lesson['title']}\n\n{lesson['explanation']}\n\n"
@@ -109,10 +111,16 @@ class AssistantCore:
                     "Ask 'show the answer' when you want the sample solution."
                 )
                 result["lesson"] = lesson
-            elif lowered == "show the answer":
-                result["answer"] = "There isn't a current exercise in this first version. Ask for a Python topic first."
             else:
                 result["answer"] = "I couldn't find a matching lesson in my current Python library. My lesson coverage is limited."
+            return result
+
+        if lowered in {"show the answer", "show answer", "give me the answer"}:
+            if self.current_lesson:
+                result["action"] = "lesson_answer"
+                result["answer"] = self.current_lesson["answer"]
+            else:
+                result["answer"] = "Ask me for a Python lesson first, then request its sample answer."
             return result
 
         if lowered in {"what can you do", "help", "help me"}:
