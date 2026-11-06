@@ -174,3 +174,40 @@ provider credentials must be stored securely as environment secrets, never commi
 to source code. ASTA_AI should treat retrieved web pages as untrusted information,
 not as instructions, and should not take consequential actions based only on a search
 result.
+
+
+## Live internet research (first connector)
+
+ASTA_AI now has an optional live web-search connector in `brain/web_research.py`.
+It uses the Tavily Search API, returns source titles, URLs, snippets and publication
+dates when supplied, and labels results as evidence that still needs checking.
+The connector validates queries and result limits, handles provider/network errors,
+and never treats retrieved webpage text as executable instructions.
+
+### Configure it
+
+1. Create a Tavily API key in your Tavily account.
+2. Set it as the environment variable `ASTA_TAVILY_API_KEY` in the environment
+   where ASTA_AI will run. Never paste the key into Python files, README files,
+   chat messages, or Git commits.
+3. Install no extra Python packages; this connector uses the standard library.
+
+On a computer or supported Python environment:
+
+~~~bash
+export ASTA_TAVILY_API_KEY="your-key"
+python brain/research_cli.py "latest developments in renewable energy"
+~~~
+
+On Windows PowerShell:
+
+~~~powershell
+$env:ASTA_TAVILY_API_KEY="your-key"
+python brain/research_cli.py "latest developments in renewable energy"
+~~~
+
+The connector is not yet wired into an Android app or the existing chat loop.
+GitHub Actions tests it with mocked responses and does not need a real API key.
+Live searches incur whatever usage or charges apply to the configured provider.
+Compare original sources, check dates, and treat search results as potentially
+incomplete or misleading.
