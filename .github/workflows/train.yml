@@ -31,6 +31,9 @@ jobs:
       - name: Train experimental phrase generator
         run: python brain/text_generator.py
 
+      - name: Train general neural language model
+        run: python brain/language_trainer.py
+
       - name: Validate and index Python coding lessons
         run: python brain/code_trainer.py
 
