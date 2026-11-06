@@ -51,6 +51,23 @@ class AssistantCoreTests(unittest.TestCase):
         self.assertEqual(result["action"], "web_search")
         search.assert_called_once()
 
+
+    def test_decision_support_uses_supplied_scores(self):
+        result = self.core.compare_options(
+            [
+                {"name": "A", "scores": {"cost": 5, "quality": 3}},
+                {"name": "B", "scores": {"cost": 2, "quality": 5}},
+            ],
+            {"cost": 3, "quality": 1},
+        )
+        self.assertEqual(result["ranking"][0]["name"], "A")
+        self.assertIn("Top-scoring option", result["explanation"])
+
+    def test_analysis_workspace_explains_required_evidence(self):
+        result = self.core.handle("Compare these two options")
+        self.assertEqual(result["action"], "decision_support_ready")
+        self.assertIn("1-5 score", result["answer"])
+
     def test_current_lesson_answer_is_only_shown_on_request(self):
         self.core.handle("Teach me Python loops")
         result = self.core.handle("show the answer")
