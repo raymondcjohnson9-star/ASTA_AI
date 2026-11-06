@@ -115,3 +115,37 @@ python -m unittest discover -s tests -v
 The example library is editable at `datasets/python_code_examples.json`.
 This is static syntax analysis and example matching, not an autonomous code-writing
 model. It does not execute submitted code or guarantee that a program works.
+
+
+## General neural language model (first experimental version)
+
+ASTA_AI now includes a small next-word neural model written in plain Python.
+It learns token embeddings and predicts a likely next token using a hidden layer
+and a softmax output. The starter corpus is in
+`datasets/general_learning_text.txt`; add original, appropriate example text there
+to change what it learns.
+
+Train it with:
+
+```bash
+python brain/language_trainer.py
+```
+
+The model is deliberately small and educational. It has a tiny vocabulary and training
+corpus, so its generated text may repeat words or be inaccurate. It is not yet a
+reliable general assistant or comparable to a large language model. The model predicts
+text patterns; it does not independently verify facts or understand intentions.
+
+Run the tests with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Personalization and phone controls: design principles
+
+Future memory and habit features must be opt-in, visible, editable, and deletable.
+ASTA_AI should only learn from information the user chooses to provide or explicitly
+allow it to access. Phone actions should use Android permissions and an allowlist;
+sensitive actions such as sending messages, sharing data, or making purchases require
+a clear confirmation. The current Python project does not yet control an Android phone.
