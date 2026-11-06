@@ -1,35 +1,46 @@
 # ASTA_AI
 
-Your personal machine-learning project, built step by step from scratch.
+A personal machine-learning project built step by step from scratch.
 
-## What is included now
+## Current abilities
 
-- A simple perceptron that learns the AND logic pattern.
-- A small feed-forward neural network with one hidden layer and backpropagation.
+- A perceptron that learns the AND logic pattern.
+- A small feed-forward neural network with backpropagation.
 - A tiny XOR training dataset.
-- Automated tests.
-- A GitHub Actions workflow that runs the tests and trains the starter model on every push to `main`, on pull requests, and when manually started.
+- Save and load the network's learned weights.
+- Continue training from a previously saved model.
+- Automated tests and a GitHub Actions training workflow.
 
 ## Run it
 
-You need Python 3.10 or newer. No third-party packages are required.
+Python 3.10 or newer is required. No third-party packages are needed.
 
 ```bash
 python -m unittest discover -s tests -v
 python brain/trainer.py
 ```
 
-## How the first model learns
+The trainer saves the model to `models/xor_model.json`. When run again, it loads that file and continues training instead of creating a fresh network.
 
-The starter neural network sees four examples of the XOR pattern. It makes predictions, compares them with the expected answers, and adjusts its weights using backpropagation.
+## Load the saved model in Python
 
-This is a small learning project, not yet a conversational AI. We will expand it gradually with better datasets, more model layers, saved model weights, and eventually Android and desktop interfaces. Training a capable language model from scratch is a much larger project and needs far more data and computing power.
+```python
+from brain.neural_network import NeuralNetwork
+
+model = NeuralNetwork.load("models/xor_model.json")
+print(model.predict([0, 1]))
+```
+
+## Important
+
+This is an educational neural network that learns a tiny mathematical pattern. It is not yet a conversational AI. A useful language model requires much larger datasets, more sophisticated architecture, and substantially more computing resources. We will build toward text learning in later stages.
 
 ## Project layout
 
 ```text
-brain/                  Model code and training program
+brain/                  Neural-network code and trainer
 datasets/               Training examples
+models/                 Saved model parameters (created after training)
 tests/                  Automated tests
 .github/workflows/      GitHub Actions automation
 ```
