@@ -1,0 +1,167 @@
+{
+  "language": "Python",
+  "lessons": [
+    {
+      "id": "variables",
+      "title": "Variables",
+      "keywords": [
+        "variable",
+        "variables",
+        "store",
+        "value",
+        "name",
+        "number"
+      ],
+      "explanation": "A variable is a name that refers to a value. Use = to assign a value. Python decides the value's type at runtime.",
+      "code": "name = 'Asta'\nage = 15\nprint(name)\nprint(age)",
+      "exercise": "Create a variable called city, store the name of your city in it, and print it.",
+      "answer": "city = 'Lagos'\nprint(city)"
+    },
+    {
+      "id": "strings",
+      "title": "Strings",
+      "keywords": [
+        "string",
+        "text",
+        "quotes",
+        "characters",
+        "combine"
+      ],
+      "explanation": "A string is text written inside single or double quotes. You can join strings with + or use an f-string.",
+      "code": "first_name = 'Asta'\nmessage = f'Hello, {first_name}!'\nprint(message)",
+      "exercise": "Create a variable called favourite_game and print a sentence that includes it.",
+      "answer": "favourite_game = 'Free Fire'\nprint(f'My favourite game is {favourite_game}.')"
+    },
+    {
+      "id": "numbers",
+      "title": "Numbers and arithmetic",
+      "keywords": [
+        "number",
+        "integer",
+        "float",
+        "math",
+        "add",
+        "subtract",
+        "multiply",
+        "divide"
+      ],
+      "explanation": "Python supports integers and decimal numbers. Arithmetic operators include +, -, *, and /.",
+      "code": "price = 120\nquantity = 3\ntotal = price * quantity\nprint(total)",
+      "exercise": "Store 12 and 8 in two variables, add them, and print the result.",
+      "answer": "first = 12\nsecond = 8\nprint(first + second)"
+    },
+    {
+      "id": "input",
+      "title": "Getting user input",
+      "keywords": [
+        "input",
+        "user",
+        "ask",
+        "readline",
+        "keyboard"
+      ],
+      "explanation": "input() displays a prompt and returns what the user types as a string. Convert it with int() when you need a whole number.",
+      "code": "name = input('What is your name? ')\nprint(f'Hello, {name}!')",
+      "exercise": "Ask the user for their favourite colour and print it.",
+      "answer": "colour = input('What is your favourite colour? ')\nprint(colour)"
+    },
+    {
+      "id": "conditions",
+      "title": "If and else conditions",
+      "keywords": [
+        "if",
+        "else",
+        "elif",
+        "condition",
+        "decision",
+        "compare",
+        "greater",
+        "less"
+      ],
+      "explanation": "if runs a block when a condition is true. elif checks another condition, and else handles the remaining case. Indentation matters.",
+      "code": "age = 15\nif age >= 18:\n    print('Adult')\nelse:\n    print('Under 18')",
+      "exercise": "Check whether a number is positive or not positive.",
+      "answer": "number = 4\nif number > 0:\n    print('Positive')\nelse:\n    print('Not positive')"
+    },
+    {
+      "id": "loops",
+      "title": "For and while loops",
+      "keywords": [
+        "loop",
+        "loops",
+        "for",
+        "while",
+        "repeat",
+        "range",
+        "iteration"
+      ],
+      "explanation": "A for loop visits items in a sequence. range(5) produces 0 through 4. A while loop repeats while its condition stays true.",
+      "code": "for number in range(1, 4):\n    print(number)\n\ncount = 0\nwhile count < 3:\n    print(count)\n    count += 1",
+      "exercise": "Use a for loop to print the numbers 1 to 5.",
+      "answer": "for number in range(1, 6):\n    print(number)"
+    },
+    {
+      "id": "functions",
+      "title": "Functions",
+      "keywords": [
+        "function",
+        "functions",
+        "def",
+        "parameter",
+        "argument",
+        "return"
+      ],
+      "explanation": "A function groups reusable instructions. Define it with def. Parameters receive inputs, and return sends a result back to the caller.",
+      "code": "def add(first, second):\n    return first + second\n\nanswer = add(3, 4)\nprint(answer)",
+      "exercise": "Write a function called greet that takes a name and returns a greeting.",
+      "answer": "def greet(name):\n    return f'Hello, {name}!'\n\nprint(greet('Asta'))"
+    },
+    {
+      "id": "lists",
+      "title": "Lists",
+      "keywords": [
+        "list",
+        "lists",
+        "append",
+        "remove",
+        "items",
+        "index"
+      ],
+      "explanation": "A list stores multiple items in order. Use square brackets to create one. append() adds an item to the end.",
+      "code": "games = ['Python', 'Chess']\ngames.append('Roblox')\nprint(games)\nprint(games[0])",
+      "exercise": "Create a list of three foods and print the second item.",
+      "answer": "foods = ['rice', 'beans', 'yam']\nprint(foods[1])"
+    },
+    {
+      "id": "dictionaries",
+      "title": "Dictionaries",
+      "keywords": [
+        "dictionary",
+        "dict",
+        "key",
+        "value",
+        "mapping"
+      ],
+      "explanation": "A dictionary stores key-value pairs. Use a key to look up its value.",
+      "code": "player = {'name': 'Asta', 'level': 5}\nprint(player['name'])\nplayer['level'] = 6",
+      "exercise": "Create a dictionary with a name and age, then print the name.",
+      "answer": "person = {'name': 'Asta', 'age': 15}\nprint(person['name'])"
+    },
+    {
+      "id": "errors",
+      "title": "Reading errors",
+      "keywords": [
+        "error",
+        "errors",
+        "bug",
+        "debug",
+        "traceback",
+        "syntax"
+      ],
+      "explanation": "A traceback shows where an error happened. SyntaxError means Python cannot parse the code. NameError often means a name was not defined. Read the last line first, then inspect the indicated line.",
+      "code": "# NameError example: the variable was never created\nplayer_name = 'Asta'\nprint(player_name)",
+      "exercise": "If Python says NameError: name 'score' is not defined, what should you check?",
+      "answer": "Check whether you created and spelled the score variable correctly before using it."
+    }
+  ]
+}
