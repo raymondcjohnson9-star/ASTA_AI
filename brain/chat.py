@@ -27,7 +27,7 @@ def main():
         try:
             message = input("You: ").strip()
         except (EOFError, KeyboardInterrupt):
-            print("\\nASTA_AI: Goodbye!")
+            print("\nASTA_AI: Goodbye!")
             break
         if message.lower() in {"quit", "exit"}:
             print("ASTA_AI: Goodbye!")
