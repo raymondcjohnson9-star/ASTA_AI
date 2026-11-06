@@ -1,37 +1,36 @@
-"""Load the starter dataset and train ASTA_AI's first neural network."""
+"""Train ASTA_AI and save its learned parameters."""
 import json
 from pathlib import Path
 
 from neural_network import NeuralNetwork
 
-
 ROOT = Path(__file__).resolve().parents[1]
 DATASET_PATH = ROOT / "datasets" / "training_data.json"
+MODEL_PATH = ROOT / "models" / "xor_model.json"
 
 
 def load_examples():
     with DATASET_PATH.open("r", encoding="utf-8") as file:
         dataset = json.load(file)
-    return [
-        (item["inputs"], item["targets"])
-        for item in dataset["examples"]
-    ]
+    return [(item["inputs"], item["targets"]) for item in dataset["examples"]]
 
 
 def main():
     examples = load_examples()
-    model = NeuralNetwork(input_size=2, hidden_size=4, output_size=1)
-    model.train(examples, epochs=6000, learning_rate=0.5)
+    if MODEL_PATH.exists():
+        model = NeuralNetwork.load(MODEL_PATH)
+        print("Loaded the previous model; continuing training.")
+    else:
+        model = NeuralNetwork(input_size=2, hidden_size=4, output_size=1)
+        print("Created a new model.")
 
-    print("ASTA_AI training complete")
-    print("Task: learn the XOR pattern")
+    model.train(examples, epochs=2000, learning_rate=0.5)
+    model.save(MODEL_PATH)
+    print(f"Training complete. Saved memory to {MODEL_PATH.relative_to(ROOT)}")
+
     for inputs, expected in examples:
         prediction = model.predict(inputs)[0]
-        print(
-            f"Input: {inputs} | expected: {expected[0]} "
-            f"| predicted: {prediction:.3f} "
-            f"| rounded: {int(prediction >= 0.5)}"
-        )
+        print(f"{inputs} -> {prediction:.3f} (expected {expected[0]})")
 
 
 if __name__ == "__main__":
