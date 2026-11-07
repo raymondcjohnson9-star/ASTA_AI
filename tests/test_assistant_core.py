@@ -11,7 +11,11 @@ from assistant_core import AssistantCore
 class AssistantCoreTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.core = AssistantCore(memory_path=Path(self.temp.name) / "memory.json", conversation_path=Path(self.temp.name) / "history.json")
+        self.core = AssistantCore(
+            memory_path=Path(self.temp.name) / "memory.json",
+            learning_path=Path(self.temp.name) / "approved_learning.json",
+            conversation_path=Path(self.temp.name) / "history.json",
+        )
 
     def tearDown(self):
         self.temp.cleanup()
