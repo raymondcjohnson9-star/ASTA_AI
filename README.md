@@ -414,3 +414,37 @@ The user can leave Usage Access disabled. Android may present a warning because 
 - App usage is not transmitted to the backend. A later feature should ask separately before sharing selected aggregate insights with ASTA.
 - The Android permission flow and Kotlin code have not been build-tested.
 - Python tests have been added/updated but have not been run. GitHub Actions and APK builds remain paused and manual-only.
+
+
+## Intelligence development — phase 4: personal intelligence brief
+
+The new `brain/personal_intelligence.py` module builds a transparent, keyword-based
+summary from saved memory and up to 100 recent user conversation turns. It reports
+recurring broad topics, project notes already present in saved memory, and practical
+suggestions. It does not infer sensitive personal traits, diagnose behavior, or claim
+that keyword counts prove a habit.
+
+The authenticated `GET /api/intelligence` endpoint returns this brief together with
+the memory and conversation data already exposed by `GET /api/memory`. The Android
+settings panel now has a **Review my personal intelligence** control. App-usage totals
+are still analyzed locally on the phone and are never sent to this endpoint.
+
+The on-device weekly usage summary now highlights the top recorded app and its share
+of listed foreground time. This is a descriptive screen-time statistic only; it cannot
+explain why an app was used or whether the amount is appropriate.
+
+Privacy and controls:
+- Usage Access remains optional and is granted or revoked through Android Settings.
+- Use `show memory`, `forget: exact memory text`, and `forget all memories` in chat
+  to review or clear saved memory.
+- Use `show conversation history` and `clear conversation history` to review or clear
+  the conversation archive.
+- Use `show lessons`, `forget lesson: exact example text`, and `clear learning`
+  to manage teaching examples.
+- The archive uses a 180-day retention window and best-effort credential redaction.
+  Redaction is not guaranteed; do not enter passwords, API keys, or other secrets.
+
+This phase is an explainable prototype, not autonomous behavioral learning or model
+weight training. Python tests and the Android build have not been run for this phase.
+The API storage remains single-profile; do not expose it to unrelated users until
+per-user authentication and isolated storage are implemented.
