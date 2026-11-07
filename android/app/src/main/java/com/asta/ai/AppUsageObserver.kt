@@ -47,6 +47,6 @@ object AppUsageObserver {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(it.totalTimeInForeground)
             "${it.packageName}: ${minutes / 60}h ${minutes % 60}m"
         }
-        return "LOCAL 7-DAY APP SUMMARY\\nTop recorded app: ${top.packageName} (${share}% of the listed foreground time)\\n\\n$rows\\n\\nThis is screen-time data only. It does not explain why an app was used or judge whether the usage is good or bad."
+        return "LOCAL 7-DAY APP SUMMARY\nTop recorded app: ${top.packageName} (${share}% of the listed foreground time)\n\n$rows\n\nThis is screen-time data only. It does not explain why an app was used or judge whether the usage is good or bad."
     }
 }
