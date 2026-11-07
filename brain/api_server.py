@@ -4,6 +4,7 @@ import json
 import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from assistant_core import AssistantCore
+from personal_intelligence import build_personal_brief
 
 MAX_BODY_BYTES = 32_000
 CORE = AssistantCore(
@@ -35,11 +36,17 @@ class AstaHandler(BaseHTTPRequestHandler):
         if self.path == "/health":
             self._send(200, {"ok": True, "service": "ASTA_AI"})
             return
-        if self.path == "/api/memory":
+        if self.path in {"/api/memory", "/api/intelligence"}:
             if not self._authorized():
                 self._send(401, {"error": "Unauthorized."})
                 return
-            self._send(200, {"memory": CORE.memory.list(), "learning": CORE.learning.list(), "conversation_history": CORE.archive.list(limit=500)})
+            memory = CORE.memory.list()
+            learning = CORE.learning.list()
+            history = CORE.archive.list(limit=500)
+            payload = {"memory": memory, "learning": learning, "conversation_history": history}
+            if self.path == "/api/intelligence":
+                payload["personal_brief"] = build_personal_brief(memory, history)
+            self._send(200, payload)
             return
         self._send(404, {"error": "Not found"})
 
