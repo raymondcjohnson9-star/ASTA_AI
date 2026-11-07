@@ -1,6 +1,7 @@
 package com.asta.ai
 
 import android.os.Bundle
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -58,6 +59,12 @@ private fun AstaApp() {
     var busy by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(true) }
     var status by remember { mutableStateOf("Connect your ASTA server to begin") }
+    var workspaceTitle by remember { mutableStateOf("Conversation") }
+    val context = LocalContext.current
+    var usageSummary by remember { mutableStateOf("App usage is not connected. ASTA only reads aggregate app time after you grant access.") }
+    var usageAccess by remember { mutableStateOf(AppUsageObserver.hasUsageAccess(context)) }
+    var personalBrief by remember { mutableStateOf("Personal intelligence is generated from ASTA's saved conversation archive and memory when you request it.") }
+    var briefLoading by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf(ChatMessage("Hello. I'm ASTA. Connect to your server and send me a message.", false)) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -84,6 +91,23 @@ private fun AstaApp() {
                 Spacer(Modifier.width(8.dp))
                 Text(status, color = Muted, fontSize = 12.sp)
             }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Panel),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(Modifier.size(7.dp).background(Teal, CircleShape))
+                    Spacer(Modifier.width(9.dp))
+                    Column {
+                        Text("ACTIVE WORKSPACE", color = Muted, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text(workspaceTitle, color = Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
             if (showSettings) {
                 Spacer(Modifier.height(12.dp))
                 Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(16.dp)) {
@@ -105,6 +129,54 @@ private fun AstaApp() {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                         )
                         Text("Keep your token private. Use a trusted HTTPS server.", color = Muted, fontSize = 11.sp)
+                        Divider(color = Muted.copy(alpha = 0.25f))
+                        Text("APP-USE LEARNING", color = Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "With your permission, ASTA can view aggregate time spent in apps over the last 7 days. It cannot read messages, passwords, or screen contents. These totals stay on this phone and are not sent to your ASTA server.",
+                            color = Muted, fontSize = 11.sp
+                        )
+                        Text(
+                            if (usageAccess) "Usage access: enabled" else "Usage access: not enabled",
+                            color = if (usageAccess) Teal else Muted, fontSize = 11.sp
+                        )
+                        Button(
+                            onClick = {
+                                usageAccess = AppUsageObserver.hasUsageAccess(context)
+                                if (!usageAccess) {
+                                    AppUsageObserver.openUsageAccessSettings(context)
+                                } else {
+                                    usageSummary = AppUsageObserver.weeklySummary(context)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (usageAccess) "Refresh 7-day app usage" else "Choose whether to allow app-usage access")
+                        }
+                        Text(usageSummary, color = White, fontSize = 11.sp)
+                        Divider(color = Muted.copy(alpha = 0.25f))
+                        Text("PERSONAL INTELLIGENCE", color = Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "On request, ASTA summarizes recurring topics and project mentions from its saved chat history and memory. Your app-usage totals remain on this phone and are not uploaded.",
+                            color = Muted, fontSize = 11.sp
+                        )
+                        Button(
+                            enabled = !briefLoading,
+                            onClick = {
+                                briefLoading = true
+                                scope.launch {
+                                    personalBrief = fetchPersonalBrief(endpoint, token)
+                                    briefLoading = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (briefLoading) "Preparing summary…" else "Review my personal intelligence")
+                        }
+                        Text(personalBrief, color = White, fontSize = 11.sp)
+                        Text(
+                            "Privacy controls in chat: 'show memory', 'forget: exact text', 'forget all memories', 'show conversation history', and 'clear conversation history'.",
+                            color = Muted, fontSize = 10.sp
+                        )
                     }
                 }
             }
@@ -153,6 +225,7 @@ private fun AstaApp() {
                                 val answer = sendMessage(endpoint, token, message)
                                 messages.add(ChatMessage(answer.first, false))
                                 status = answer.second
+                                workspaceTitle = answer.third
                                 busy = false
                                 listState.animateScrollToItem(messages.lastIndex)
                             }
@@ -174,6 +247,7 @@ private fun AstaApp() {
                             val answer = sendMessage(endpoint, token, message)
                             messages.add(ChatMessage(answer.first, false))
                             status = answer.second
+                            workspaceTitle = answer.third
                             busy = false
                             listState.animateScrollToItem(messages.lastIndex)
                         }
@@ -186,16 +260,67 @@ private fun AstaApp() {
     }
 }
 
-private suspend fun sendMessage(base: String, token: String, message: String): Pair<String, String> =
+
+private suspend fun fetchPersonalBrief(base: String, token: String): String =
     withContext(Dispatchers.IO) {
-        if (base.isBlank() || token.isBlank()) return@withContext Pair(
-            "Open settings and enter your server address and private access token.", "Not connected"
+        if (base.isBlank() || token.isBlank()) return@withContext "Connect your HTTPS server and access token first."
+        var connection: HttpURLConnection? = null
+        try {
+            val root = base.trim().removeSuffix("/")
+            if (!root.startsWith("https://")) return@withContext "For safety, ASTA requires an HTTPS server address."
+            connection = (URL("$root/api/intelligence").openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 12000
+                readTimeout = 20000
+                setRequestProperty("Authorization", "Bearer $token")
+            }
+            val code = connection.responseCode
+            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+            val raw = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            val json = JSONObject(raw.ifBlank { "{}" })
+            if (code !in 200..299) return@withContext json.optString("error", "Could not load the summary ($code).")
+            val brief = json.optJSONObject("personal_brief") ?: return@withContext "ASTA did not return a personal summary."
+            val output = StringBuilder()
+            output.append("Saved memories: ").append(brief.optInt("saved_memories_count")).append("\n")
+            output.append("Recent user turns analyzed: ").append(brief.optInt("conversation_turns_analyzed")).append("\n\n")
+            val themes = brief.optJSONArray("themes")
+            if (themes != null && themes.length() > 0) {
+                output.append("Recurring topics:\n")
+                for (i in 0 until themes.length()) {
+                    val item = themes.getJSONObject(i)
+                    output.append("• ").append(item.optString("topic")).append(" (")
+                        .append(item.optInt("mentions")).append(" keyword matches)\n")
+                }
+            } else output.append("No recurring topic pattern found yet.\n")
+            val projects = brief.optJSONArray("active_projects")
+            if (projects != null && projects.length() > 0) {
+                output.append("\nProject notes:\n")
+                for (i in 0 until projects.length()) output.append("• ").append(projects.optString(i)).append("\n")
+            }
+            val suggestions = brief.optJSONArray("suggestions")
+            if (suggestions != null && suggestions.length() > 0) {
+                output.append("\nIdeas:\n")
+                for (i in 0 until suggestions.length()) output.append("• ").append(suggestions.optString(i)).append("\n")
+            }
+            output.append("\n").append(brief.optString("limitations"))
+            output.toString()
+        } catch (e: Exception) {
+            "Could not load the personal summary. Check the HTTPS server connection."
+        } finally {
+            connection?.disconnect()
+        }
+    }
+
+private suspend fun sendMessage(base: String, token: String, message: String): Triple<String, String, String> =
+    withContext(Dispatchers.IO) {
+        if (base.isBlank() || token.isBlank()) return@withContext Triple(
+            "Open settings and enter your server address and private access token.", "Not connected", "Conversation"
         )
         var connection: HttpURLConnection? = null
         try {
             val root = base.trim().removeSuffix("/")
             if (!root.startsWith("https://")) {
-                return@withContext Pair("For safety, ASTA requires an HTTPS server address.", "HTTPS required")
+                return@withContext Triple("For safety, ASTA requires an HTTPS server address.", "HTTPS required", "Conversation")
             }
             connection = (URL("$root/api/chat").openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
@@ -212,12 +337,12 @@ private suspend fun sendMessage(base: String, token: String, message: String): P
             val raw = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
             val json = JSONObject(raw.ifBlank { "{}" })
             if (code in 200..299) {
-                Pair(json.optString("answer", "ASTA returned an empty response."), "Connected to ASTA server")
+                Triple(json.optString("answer", "ASTA returned an empty response."), "Connected to ASTA server", json.optJSONObject("workspace")?.optString("title", "Conversation") ?: "Conversation")
             } else {
-                Pair(json.optString("error", "Request failed ($code)."), "Server error: $code")
+                Triple(json.optString("error", "Request failed ($code)."), "Server error: $code", "Conversation")
             }
         } catch (e: Exception) {
-            Pair("I couldn't reach the ASTA server. Check the address, internet connection, and whether the server is running.", "Connection failed")
+            Triple("I couldn't reach the ASTA server. Check the address, internet connection, and whether the server is running.", "Connection failed", "Conversation")
         } finally {
             connection?.disconnect()
         }

@@ -11,7 +11,7 @@ from assistant_core import AssistantCore
 class AssistantCoreTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.core = AssistantCore(memory_path=Path(self.temp.name) / "memory.json")
+        self.core = AssistantCore(memory_path=Path(self.temp.name) / "memory.json", conversation_path=Path(self.temp.name) / "history.json")
 
     def tearDown(self):
         self.temp.cleanup()
@@ -27,9 +27,49 @@ class AssistantCoreTests(unittest.TestCase):
         self.assertEqual(self.core.handle("show memory")["memory"],
                          ["I prefer short explanations"])
 
-    def test_no_implicit_memory_write(self):
+    def test_preference_is_learned_automatically(self):
         self.core.handle("I prefer short explanations")
-        self.assertEqual(self.core.memory.list(), [])
+        self.assertIn("I prefer short explanations", self.core.memory.list())
+
+    def test_conversation_is_archived_automatically(self):
+        self.core.handle("Hello ASTA")
+        history = self.core.archive.list()
+        self.assertEqual(history[0]["role"], "user")
+        self.assertEqual(history[0]["content"], "Hello ASTA")
+        self.assertEqual(history[1]["role"], "assistant")
+
+    def test_conversation_history_can_be_cleared(self):
+        self.core.handle("Hello ASTA")
+        result = self.core.handle("clear conversation history")
+        self.assertEqual(result["action"], "clear_conversation_history")
+        self.assertEqual(len(self.core.archive.list()), 1)
+        self.assertEqual(self.core.archive.list()[0]["role"], "assistant")
+
+    def test_memory_survives_new_assistant_instance(self):
+        path = Path(self.temp.name) / "durable.json"
+        first = AssistantCore(memory_path=path)
+        first.handle("remember that explain one step at a time")
+        second = AssistantCore(memory_path=path)
+        self.assertEqual(second.memory.list(), ["explain one step at a time"])
+
+    def test_teaching_examples_are_explicit_and_persistent(self):
+        result = self.core.handle("teach ASTA: When teaching code, explain each line.")
+        self.assertEqual(result["action"], "teach")
+        self.assertEqual(len(result["learning"]), 1)
+        second = AssistantCore(
+            memory_path=Path(self.temp.name) / "memory.json",
+            learning_path=Path(self.temp.name) / "approved_learning.json",
+            conversation_path=Path(self.temp.name) / "history.json",
+        )
+        self.assertEqual(second.learning.list(), ["When teaching code, explain each line."])
+
+    def test_learning_can_be_listed_and_removed(self):
+        self.core.handle("teach ASTA: Prefer small examples.")
+        shown = self.core.handle("show lessons")
+        self.assertEqual(shown["action"], "show_learning")
+        removed = self.core.handle("forget lesson: Prefer small examples.")
+        self.assertEqual(removed["action"], "forget_learning")
+        self.assertEqual(removed["learning"], [])
 
     def test_forget_one_and_all(self):
         self.core.handle("remember that use simple examples")
@@ -65,8 +105,16 @@ class AssistantCoreTests(unittest.TestCase):
 
     def test_analysis_workspace_explains_required_evidence(self):
         result = self.core.handle("Compare these two options")
-        self.assertEqual(result["action"], "decision_support_ready")
+        self.assertEqual(result["action"], "structured_analysis")
         self.assertIn("1-5 score", result["answer"])
+        self.assertIn("reasoning", result)
+
+    def test_planning_workspace_returns_a_transparent_plan(self):
+        result = self.core.handle("Help me plan a Python project without paid APIs")
+        self.assertEqual(result["workspace"]["mode"], "planning")
+        self.assertEqual(result["action"], "structured_plan")
+        self.assertIn("Suggested steps", result["answer"])
+        self.assertIn("without paid APIs", result["answer"])
 
     def test_current_lesson_answer_is_only_shown_on_request(self):
         self.core.handle("Teach me Python loops")

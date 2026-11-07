@@ -309,3 +309,142 @@ not a published app. The API still needs deployment to a server with HTTPS, and
 a language model must be installed/configured there. The app does not yet have
 voice input, image uploads, background phone controls, or persistent on-device
 chat history.
+
+
+## Intelligence development — phase 1
+
+The first intelligence-development branch adds a transparent request-analysis
+module in `brain/reasoning_engine.py`. It extracts constraints actually stated
+by the user, identifies missing information, and produces a checklist-style plan
+with verification steps. It does not claim to be deep reasoning or a trained
+foundation model.
+
+The assistant routes planning and analysis requests through this module and
+returns the structured result alongside the normal answer. The Android client
+now reads the returned workspace title and displays an active-workspace panel,
+so the backend's adaptive workspace selection is visible in the app.
+
+New tests cover constraint extraction, missing details, formatting, and the
+assistant's planning route. GitHub Actions workflows remain manual-only:
+`workflow_dispatch` is the only trigger. No build or training workflow was
+started as part of this change.
+
+### Remaining work
+
+- Run the Python test suite and Android debug build before merging this branch.
+- Connect a language model runtime before expecting fluent, open-ended answers.
+- Add durable server-side storage before relying on memory across restarts.
+- Add richer workspace-specific Android components, voice, image input, and
+  permission-gated phone integrations in later phases.
+
+
+## Intelligence development — phase 2: memory and explicit learning
+
+ASTA now has two separate user-controlled stores:
+
+- **Memory** saves preferences and facts only after an explicit `remember that ...` or `remember: ...` command.
+- **Approved learning examples** are saved only after an explicit `teach ASTA: ...` command. These examples are supplied as context to a configured language model when relevant; they do not update or retrain model weights.
+
+Useful chat commands:
+
+- `show memory` — list saved memory.
+- `forget: exact memory text` — remove one exact memory.
+- `forget all memories` — clear saved memory.
+- `teach ASTA: ...` — add a user-approved teaching example.
+- `show lessons` — list approved teaching examples.
+- `forget lesson: exact example text` — remove one example.
+- `clear learning` — clear all approved teaching examples.
+
+Both stores use readable JSON and atomic file replacement. The API accepts configurable paths:
+
+```bash
+export ASTA_MEMORY_PATH=/var/lib/asta/user_memory.json
+export ASTA_LEARNING_PATH=/var/lib/asta/approved_learning.json
+python brain/api_server.py
+```
+
+**Deployment warning:** setting a path does not create durable storage by itself. The directory must be on a persistent disk/volume provided by the hosting platform, with write permission for the ASTA process. If the host uses an ephemeral filesystem, data can still disappear when the service is replaced. Back up these files securely and never store passwords, API keys, or highly sensitive information in memory.
+
+The authenticated API now exposes `GET /api/memory` to retrieve the two user-controlled lists. It requires the same bearer token as chat. The Android screen has not yet been updated with a dedicated memory manager; commands can be used in chat for now.
+
+### Learning limitations
+
+ASTA does not silently study all conversations or users' habits. The teaching store is an approved-example library, not autonomous model training. A connected language model can use those examples as context; without a configured model, they are saved but do not make the deterministic fallback more intelligent. Actual weight training, evaluation data, and safe model updates remain future work.
+
+Tests have been added for atomic-memory behavior, persistence across assistant instances, and explicit learning commands. They have **not** been run in this phase. GitHub Actions and APK builds remain manual-only and were not started.
+
+
+## Intelligence development — phase 3: automatic memory and app-use insights
+
+ASTA's memory behavior now moves beyond manual save commands:
+
+- Ordinary user and assistant chat turns are automatically archived in a local JSON conversation history.
+- The archive keeps up to 10,000 entries and applies a 180-day retention window when new turns are added.
+- Obvious credential patterns such as `api_key=...`, `password=...`, and common token formats are redacted before archival. This is a best-effort filter, not a guarantee that every sensitive detail is detected.
+- ASTA automatically promotes a small set of clear preference and goal statements (for example, "I prefer...", "my goal is...", and "I'm working on...") into its memory list.
+- Recent archived conversation turns are reloaded as context for a configured language model after a server restart.
+- Use `show conversation history` to inspect recent saved turns and `clear conversation history` to clear the archive. Existing memory commands remain available.
+
+Configure storage on a persistent, private server volume:
+
+```bash
+export ASTA_MEMORY_PATH=/var/lib/asta/user_memory.json
+export ASTA_LEARNING_PATH=/var/lib/asta/approved_learning.json
+export ASTA_CONVERSATION_PATH=/var/lib/asta/conversation_history.json
+```
+
+**Important:** this prototype has one shared assistant profile. Do not expose it to multiple unrelated users until authentication is upgraded to isolate each person's memories and conversation archive. A persistent disk must be mounted by the host; local container files can disappear. Never use this archive as a password vault.
+
+### Android app-use observation
+
+The Android client now includes an optional **APP-USE LEARNING** panel. It can request Android's special Usage Access setting and read aggregate foreground time for the previous seven days using `UsageStatsManager`.
+
+- The user must enable Usage Access in Android Settings.
+- The first implementation reads app package identifiers and total foreground time only.
+- It does not read notifications, messages, keystrokes, passwords, or screen contents.
+- App-usage totals are displayed locally and are not sent to the ASTA server.
+- This is an observation foundation, not yet a background habit-learning engine or an automatic recommendation system.
+
+The user can leave Usage Access disabled. Android may present a warning because Usage Access is a sensitive special permission. ASTA should explain the reason before sending the user to Settings.
+
+### Current limits and next integration work
+
+- Automatic memory extraction is heuristic and only recognizes a few explicit preference/goal sentence patterns; it does not understand or safely retain every fact yet.
+- The full chat archive is retained for up to 180 days by default. Users can clear it, and a future settings screen should let them adjust retention and pause archiving.
+- App usage is not transmitted to the backend. A later feature should ask separately before sharing selected aggregate insights with ASTA.
+- The Android permission flow and Kotlin code have not been build-tested.
+- Python tests have been added/updated but have not been run. GitHub Actions and APK builds remain paused and manual-only.
+
+
+## Intelligence development — phase 4: personal intelligence brief
+
+The new `brain/personal_intelligence.py` module builds a transparent, keyword-based
+summary from saved memory and up to 100 recent user conversation turns. It reports
+recurring broad topics, project notes already present in saved memory, and practical
+suggestions. It does not infer sensitive personal traits, diagnose behavior, or claim
+that keyword counts prove a habit.
+
+The authenticated `GET /api/intelligence` endpoint returns this brief together with
+the memory and conversation data already exposed by `GET /api/memory`. The Android
+settings panel now has a **Review my personal intelligence** control. App-usage totals
+are still analyzed locally on the phone and are never sent to this endpoint.
+
+The on-device weekly usage summary now highlights the top recorded app and its share
+of listed foreground time. This is a descriptive screen-time statistic only; it cannot
+explain why an app was used or whether the amount is appropriate.
+
+Privacy and controls:
+- Usage Access remains optional and is granted or revoked through Android Settings.
+- Use `show memory`, `forget: exact memory text`, and `forget all memories` in chat
+  to review or clear saved memory.
+- Use `show conversation history` and `clear conversation history` to review or clear
+  the conversation archive.
+- Use `show lessons`, `forget lesson: exact example text`, and `clear learning`
+  to manage teaching examples.
+- The archive uses a 180-day retention window and best-effort credential redaction.
+  Redaction is not guaranteed; do not enter passwords, API keys, or other secrets.
+
+This phase is an explainable prototype, not autonomous behavioral learning or model
+weight training. Python tests and the Android build have not been run for this phase.
+The API storage remains single-profile; do not expose it to unrelated users until
+per-user authentication and isolated storage are implemented.
