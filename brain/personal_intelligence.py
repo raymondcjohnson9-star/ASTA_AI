@@ -4,7 +4,6 @@ This module reports observable themes and projects; it does not infer sensitive
 traits, diagnose behavior, or claim to know the user's intentions.
 """
 from __future__ import annotations
-from collections import Counter
 from datetime import datetime, timezone
 
 TOPIC_TERMS = {
