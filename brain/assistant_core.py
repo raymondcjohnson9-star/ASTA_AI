@@ -47,7 +47,14 @@ class AssistantCore:
             "\n\nUser-approved teaching examples (follow when relevant):\n" + learning_text
         )
         messages = [{"role": "system", "content": system_message}]
-        messages.extend(self.conversation_history[-8:])
+        # Rehydrate recent context from the durable archive after app restarts.
+        archived = self.archive.list(limit=9)
+        prior_turns = archived[:-1] if archived and archived[-1].get("role") == "user" else archived
+        messages.extend(
+            {"role": item["role"], "content": item["content"]}
+            for item in prior_turns[-8:]
+            if item.get("role") in {"user", "assistant"}
+        )
         messages.append({"role": "user", "content": message})
         answer = self.language_engine.complete(messages)
         self.conversation_history.extend([
