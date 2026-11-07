@@ -65,8 +65,16 @@ class AssistantCoreTests(unittest.TestCase):
 
     def test_analysis_workspace_explains_required_evidence(self):
         result = self.core.handle("Compare these two options")
-        self.assertEqual(result["action"], "decision_support_ready")
+        self.assertEqual(result["action"], "structured_analysis")
         self.assertIn("1-5 score", result["answer"])
+        self.assertIn("reasoning", result)
+
+    def test_planning_workspace_returns_a_transparent_plan(self):
+        result = self.core.handle("Help me plan a Python project without paid APIs")
+        self.assertEqual(result["workspace"]["mode"], "planning")
+        self.assertEqual(result["action"], "structured_plan")
+        self.assertIn("Suggested steps", result["answer"])
+        self.assertIn("without paid APIs", result["answer"])
 
     def test_current_lesson_answer_is_only_shown_on_request(self):
         self.core.handle("Teach me Python loops")
