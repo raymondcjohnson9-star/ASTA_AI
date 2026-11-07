@@ -18,11 +18,13 @@ from code_brain import CodeBrain
 from decision_engine import recommend, explain_recommendation
 from language_engine import LanguageEngine, LanguageEngineError
 from reasoning_engine import analyze_request, format_analysis
+from conversation_archive import ConversationArchive, extract_memory_candidates
 
 class AssistantCore:
     def __init__(self, memory_path=None, lessons_path=None, language_engine=None, learning_path=None):
         self.memory = UserMemory(memory_path or os.getenv("ASTA_MEMORY_PATH", ROOT / "models" / "user_memory.json"))
         self.learning = LearningStore(learning_path or os.getenv("ASTA_LEARNING_PATH", ROOT / "models" / "approved_learning.json"))
+        self.archive = ConversationArchive(os.getenv("ASTA_CONVERSATION_PATH", ROOT / "models" / "conversation_history.json"))
         self.lessons_path = Path(lessons_path or ROOT / "datasets" / "python_lessons.json")
         self.current_lesson = None
         self.language_engine = language_engine or LanguageEngine.from_environment()
@@ -63,6 +65,23 @@ class AssistantCore:
         }
 
     def handle(self, message):
+        """Archive ordinary turns automatically, then process the request."""
+        text = str(message or "").strip()
+        if text and text.casefold() not in {"show conversation history", "clear conversation history"}:
+            self.archive.append("user", text)
+            for candidate in extract_memory_candidates(text):
+                try:
+                    self.memory.remember(candidate)
+                except ValueError:
+                    pass
+        result = self._handle_message(text)
+        if result.get("answer"):
+            self.archive.append("assistant", result["answer"])
+        result["conversation_history"] = self.archive.list(limit=100)
+        result["memory"] = self.memory.list()
+        return result
+
+    def _handle_message(self, message):
         text = str(message or "").strip()
         workspace = choose_workspace(text)
         result = {"workspace": workspace, "answer": "", "sources": [], "action": "respond",
@@ -71,6 +90,17 @@ class AssistantCore:
             result["answer"] = "Tell me what you'd like help with."
             return result
         lowered = text.casefold()
+
+        if lowered == "show conversation history":
+            history = self.archive.list(limit=100)
+            result["action"] = "show_conversation_history"
+            result["answer"] = "\\n".join(f"{x['role']}: {x['content']}" for x in history) or "There is no saved conversation history."
+            return result
+        if lowered == "clear conversation history":
+            self.archive.clear()
+            result["action"] = "clear_conversation_history"
+            result["answer"] = "Saved conversation history has been cleared."
+            return result
 
         if lowered in {"show memory", "what do you remember", "list memories"}:
             items = self.memory.list()
