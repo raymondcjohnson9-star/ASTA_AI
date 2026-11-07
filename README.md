@@ -336,3 +336,39 @@ started as part of this change.
 - Add durable server-side storage before relying on memory across restarts.
 - Add richer workspace-specific Android components, voice, image input, and
   permission-gated phone integrations in later phases.
+
+
+## Intelligence development — phase 2: memory and explicit learning
+
+ASTA now has two separate user-controlled stores:
+
+- **Memory** saves preferences and facts only after an explicit `remember that ...` or `remember: ...` command.
+- **Approved learning examples** are saved only after an explicit `teach ASTA: ...` command. These examples are supplied as context to a configured language model when relevant; they do not update or retrain model weights.
+
+Useful chat commands:
+
+- `show memory` — list saved memory.
+- `forget: exact memory text` — remove one exact memory.
+- `forget all memories` — clear saved memory.
+- `teach ASTA: ...` — add a user-approved teaching example.
+- `show lessons` — list approved teaching examples.
+- `forget lesson: exact example text` — remove one example.
+- `clear learning` — clear all approved teaching examples.
+
+Both stores use readable JSON and atomic file replacement. The API accepts configurable paths:
+
+```bash
+export ASTA_MEMORY_PATH=/var/lib/asta/user_memory.json
+export ASTA_LEARNING_PATH=/var/lib/asta/approved_learning.json
+python brain/api_server.py
+```
+
+**Deployment warning:** setting a path does not create durable storage by itself. The directory must be on a persistent disk/volume provided by the hosting platform, with write permission for the ASTA process. If the host uses an ephemeral filesystem, data can still disappear when the service is replaced. Back up these files securely and never store passwords, API keys, or highly sensitive information in memory.
+
+The authenticated API now exposes `GET /api/memory` to retrieve the two user-controlled lists. It requires the same bearer token as chat. The Android screen has not yet been updated with a dedicated memory manager; commands can be used in chat for now.
+
+### Learning limitations
+
+ASTA does not silently study all conversations or users' habits. The teaching store is an approved-example library, not autonomous model training. A connected language model can use those examples as context; without a configured model, they are saved but do not make the deterministic fallback more intelligent. Actual weight training, evaluation data, and safe model updates remain future work.
+
+Tests have been added for atomic-memory behavior, persistence across assistant instances, and explicit learning commands. They have **not** been run in this phase. GitHub Actions and APK builds remain manual-only and were not started.
