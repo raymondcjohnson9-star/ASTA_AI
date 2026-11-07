@@ -20,6 +20,7 @@ from web_research import search_web, format_sources, ResearchError
 from code_brain import CodeBrain
 from decision_engine import recommend, explain_recommendation
 from language_engine import LanguageEngine, LanguageEngineError
+from reasoning_engine import analyze_request, format_analysis
 
 class AssistantCore:
     def __init__(self, memory_path=None, lessons_path=None, language_engine=None):
@@ -128,9 +129,17 @@ class AssistantCore:
                 result["action"] = "web_search_failed"
             return result
 
-        if workspace["mode"] == "analysis":
-            result["action"] = "decision_support_ready"
-            result["answer"] = "I can compare options when you provide each option name, 1-5 scores for every criterion, and the importance weight for each criterion. The core exposes compare_options(options, weights). I will not invent scores or make the choice for you."
+        if workspace["mode"] in {"planning", "analysis"}:
+            structured = analyze_request(text)
+            result["reasoning"] = structured
+            result["action"] = "structured_plan" if workspace["mode"] == "planning" else "structured_analysis"
+            result["answer"] = format_analysis(structured)
+            if workspace["mode"] == "analysis" and any(word in lowered for word in ("compare", "which is better", "pros and cons")):
+                result["answer"] += (
+                    "\\n\\nFor a scored comparison, send the option names, the criteria, "
+                    "a 1-5 score for each option on every criterion, and the importance "
+                    "weight for each criterion. ASTA will not invent missing scores."
+                )
             return result
 
         if workspace["mode"] == "coding":
