@@ -136,7 +136,7 @@ class AssistantCore:
             result["answer"] = format_analysis(structured)
             if workspace["mode"] == "analysis" and any(word in lowered for word in ("compare", "which is better", "pros and cons")):
                 result["answer"] += (
-                    "\\n\\nFor a scored comparison, send the option names, the criteria, "
+                    "\n\nFor a scored comparison, send the option names, the criteria, "
                     "a 1-5 score for each option on every criterion, and the importance "
                     "weight for each criterion. ASTA will not invent missing scores."
                 )
