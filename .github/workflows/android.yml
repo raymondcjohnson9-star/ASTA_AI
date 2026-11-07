@@ -1,7 +1,10 @@
 name: ASTA Android APK
 
-# Manual only: keep builds paused until explicitly started from Actions.
+# Build automatically when development code is pushed; manual runs remain available.
 on:
+  push:
+    branches:
+      - asta/intelligence-phase-1
   workflow_dispatch:
 
 jobs:

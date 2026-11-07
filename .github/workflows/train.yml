@@ -1,7 +1,10 @@
 name: ASTA_AI - Train and Test
 
-# Paused during development. Run manually from the Actions tab when ASTA_AI is ready.
+# Run tests and training automatically on development-branch pushes.
 on:
+  push:
+    branches:
+      - asta/intelligence-phase-1
   workflow_dispatch:
 
 jobs:
