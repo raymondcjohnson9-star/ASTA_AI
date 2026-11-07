@@ -9,15 +9,15 @@ import re
 
 
 def analyze_request(request: str) -> dict:
-    text = re.sub(r"\\s+", " ", str(request or "")).strip()
+    text = re.sub(r"\s+", " ", str(request or "")).strip()
     if not text:
         raise ValueError("request cannot be empty")
 
     constraints = []
     patterns = (
-        r"\\b(?:by|before|until)\\s+[^,.!?]+",
-        r"\\b(?:under|below|within|at least|no more than)\\s+[^,.!?]+",
-        r"\\b(?:must|need to|should|without|using)\\s+[^,.!?]+",
+        r"\b(?:by|before|until)\s+[^,.!?]+",
+        r"\b(?:under|below|within|at least|no more than)\s+[^,.!?]+",
+        r"\b(?:must|need to|should|without|using)\s+[^,.!?]+",
     )
     for pattern in patterns:
         constraints.extend(match.group(0).strip() for match in re.finditer(pattern, text, re.I))
@@ -28,7 +28,7 @@ def analyze_request(request: str) -> dict:
     if not constraints:
         questions.append("No explicit constraints were detected; ask before assuming budget, timing, or tools.")
 
-    objective = re.sub(r"^[,;:\\s]+", "", text)
+    objective = re.sub(r"^[,;:\s]+", "", text)
     return {
         "goal": objective,
         "constraints": list(dict.fromkeys(constraints)),
@@ -53,4 +53,4 @@ def format_analysis(analysis: dict) -> str:
     lines.extend(["", "Questions / unknowns"])
     lines.extend(f"- {item}" for item in analysis["unknowns"] or ["No obvious missing detail detected; review before acting."])
     lines.extend(["", "Verification", analysis["verification"], "", analysis["confidence_note"]])
-    return "\\n".join(lines)
+    return "\n".join(lines)
