@@ -309,3 +309,30 @@ not a published app. The API still needs deployment to a server with HTTPS, and
 a language model must be installed/configured there. The app does not yet have
 voice input, image uploads, background phone controls, or persistent on-device
 chat history.
+
+
+## Intelligence development — phase 1
+
+The first intelligence-development branch adds a transparent request-analysis
+module in `brain/reasoning_engine.py`. It extracts constraints actually stated
+by the user, identifies missing information, and produces a checklist-style plan
+with verification steps. It does not claim to be deep reasoning or a trained
+foundation model.
+
+The assistant routes planning and analysis requests through this module and
+returns the structured result alongside the normal answer. The Android client
+now reads the returned workspace title and displays an active-workspace panel,
+so the backend's adaptive workspace selection is visible in the app.
+
+New tests cover constraint extraction, missing details, formatting, and the
+assistant's planning route. GitHub Actions workflows remain manual-only:
+`workflow_dispatch` is the only trigger. No build or training workflow was
+started as part of this change.
+
+### Remaining work
+
+- Run the Python test suite and Android debug build before merging this branch.
+- Connect a language model runtime before expecting fluent, open-ended answers.
+- Add durable server-side storage before relying on memory across restarts.
+- Add richer workspace-specific Android components, voice, image input, and
+  permission-gated phone integrations in later phases.
