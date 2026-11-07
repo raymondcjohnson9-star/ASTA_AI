@@ -11,7 +11,7 @@ from assistant_core import AssistantCore
 class AssistantCoreTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.core = AssistantCore(memory_path=Path(self.temp.name) / "memory.json")
+        self.core = AssistantCore(memory_path=Path(self.temp.name) / "memory.json", conversation_path=Path(self.temp.name) / "history.json")
 
     def tearDown(self):
         self.temp.cleanup()
@@ -27,9 +27,23 @@ class AssistantCoreTests(unittest.TestCase):
         self.assertEqual(self.core.handle("show memory")["memory"],
                          ["I prefer short explanations"])
 
-    def test_no_implicit_memory_write(self):
+    def test_preference_is_learned_automatically(self):
         self.core.handle("I prefer short explanations")
-        self.assertEqual(self.core.memory.list(), [])
+        self.assertIn("I prefer short explanations", self.core.memory.list())
+
+    def test_conversation_is_archived_automatically(self):
+        self.core.handle("Hello ASTA")
+        history = self.core.archive.list()
+        self.assertEqual(history[0]["role"], "user")
+        self.assertEqual(history[0]["content"], "Hello ASTA")
+        self.assertEqual(history[1]["role"], "assistant")
+
+    def test_conversation_history_can_be_cleared(self):
+        self.core.handle("Hello ASTA")
+        result = self.core.handle("clear conversation history")
+        self.assertEqual(result["action"], "clear_conversation_history")
+        self.assertEqual(len(self.core.archive.list()), 1)
+        self.assertEqual(self.core.archive.list()[0]["role"], "assistant")
 
     def test_memory_survives_new_assistant_instance(self):
         path = Path(self.temp.name) / "durable.json"
@@ -45,6 +59,7 @@ class AssistantCoreTests(unittest.TestCase):
         second = AssistantCore(
             memory_path=Path(self.temp.name) / "memory.json",
             learning_path=Path(self.temp.name) / "approved_learning.json",
+            conversation_path=Path(self.temp.name) / "history.json",
         )
         self.assertEqual(second.learning.list(), ["When teaching code, explain each line."])
 
