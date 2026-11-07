@@ -63,6 +63,8 @@ private fun AstaApp() {
     val context = LocalContext.current
     var usageSummary by remember { mutableStateOf("App usage is not connected. ASTA only reads aggregate app time after you grant access.") }
     var usageAccess by remember { mutableStateOf(AppUsageObserver.hasUsageAccess(context)) }
+    var personalBrief by remember { mutableStateOf("Personal intelligence is generated from ASTA's saved conversation archive and memory when you request it.") }
+    var briefLoading by remember { mutableStateOf(false) }
     val messages = remember { mutableStateListOf(ChatMessage("Hello. I'm ASTA. Connect to your server and send me a message.", false)) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -151,6 +153,26 @@ private fun AstaApp() {
                             Text(if (usageAccess) "Refresh 7-day app usage" else "Choose whether to allow app-usage access")
                         }
                         Text(usageSummary, color = White, fontSize = 11.sp)
+                        Divider(color = Muted.copy(alpha = 0.25f))
+                        Text("PERSONAL INTELLIGENCE", color = Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "On request, ASTA summarizes recurring topics and project mentions from its saved chat history and memory. Your app-usage totals remain on this phone and are not uploaded.",
+                            color = Muted, fontSize = 11.sp
+                        )
+                        Button(
+                            enabled = !briefLoading,
+                            onClick = {
+                                briefLoading = true
+                                scope.launch {
+                                    personalBrief = fetchPersonalBrief(endpoint, token)
+                                    briefLoading = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (briefLoading) "Preparing summary…" else "Review my personal intelligence")
+                        }
+                        Text(personalBrief, color = White, fontSize = 11.sp)
                     }
                 }
             }
@@ -233,6 +255,57 @@ private fun AstaApp() {
         }
     }
 }
+
+
+private suspend fun fetchPersonalBrief(base: String, token: String): String =
+    withContext(Dispatchers.IO) {
+        if (base.isBlank() || token.isBlank()) return@withContext "Connect your HTTPS server and access token first."
+        var connection: HttpURLConnection? = null
+        try {
+            val root = base.trim().removeSuffix("/")
+            if (!root.startsWith("https://")) return@withContext "For safety, ASTA requires an HTTPS server address."
+            connection = (URL("$root/api/intelligence").openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 12000
+                readTimeout = 20000
+                setRequestProperty("Authorization", "Bearer $token")
+            }
+            val code = connection.responseCode
+            val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+            val raw = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            val json = JSONObject(raw.ifBlank { "{}" })
+            if (code !in 200..299) return@withContext json.optString("error", "Could not load the summary ($code).")
+            val brief = json.optJSONObject("personal_brief") ?: return@withContext "ASTA did not return a personal summary."
+            val output = StringBuilder()
+            output.append("Saved memories: ").append(brief.optInt("saved_memories_count")).append("\n")
+            output.append("Recent user turns analyzed: ").append(brief.optInt("conversation_turns_analyzed")).append("\n\n")
+            val themes = brief.optJSONArray("themes")
+            if (themes != null && themes.length() > 0) {
+                output.append("Recurring topics:\n")
+                for (i in 0 until themes.length()) {
+                    val item = themes.getJSONObject(i)
+                    output.append("• ").append(item.optString("topic")).append(" (")
+                        .append(item.optInt("mentions")).append(" keyword matches)\n")
+                }
+            } else output.append("No recurring topic pattern found yet.\n")
+            val projects = brief.optJSONArray("active_projects")
+            if (projects != null && projects.length() > 0) {
+                output.append("\nProject notes:\n")
+                for (i in 0 until projects.length()) output.append("• ").append(projects.optString(i)).append("\n")
+            }
+            val suggestions = brief.optJSONArray("suggestions")
+            if (suggestions != null && suggestions.length() > 0) {
+                output.append("\nIdeas:\n")
+                for (i in 0 until suggestions.length()) output.append("• ").append(suggestions.optString(i)).append("\n")
+            }
+            output.append("\n").append(brief.optString("limitations"))
+            output.toString()
+        } catch (e: Exception) {
+            "Could not load the personal summary. Check the HTTPS server connection."
+        } finally {
+            connection?.disconnect()
+        }
+    }
 
 private suspend fun sendMessage(base: String, token: String, message: String): Triple<String, String, String> =
     withContext(Dispatchers.IO) {
