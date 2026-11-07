@@ -31,6 +31,31 @@ class AssistantCoreTests(unittest.TestCase):
         self.core.handle("I prefer short explanations")
         self.assertEqual(self.core.memory.list(), [])
 
+    def test_memory_survives_new_assistant_instance(self):
+        path = Path(self.temp.name) / "durable.json"
+        first = AssistantCore(memory_path=path)
+        first.handle("remember that explain one step at a time")
+        second = AssistantCore(memory_path=path)
+        self.assertEqual(second.memory.list(), ["explain one step at a time"])
+
+    def test_teaching_examples_are_explicit_and_persistent(self):
+        result = self.core.handle("teach ASTA: When teaching code, explain each line.")
+        self.assertEqual(result["action"], "teach")
+        self.assertEqual(len(result["learning"]), 1)
+        second = AssistantCore(
+            memory_path=Path(self.temp.name) / "memory.json",
+            learning_path=Path(self.temp.name) / "approved_learning.json",
+        )
+        self.assertEqual(second.learning.list(), ["When teaching code, explain each line."])
+
+    def test_learning_can_be_listed_and_removed(self):
+        self.core.handle("teach ASTA: Prefer small examples.")
+        shown = self.core.handle("show lessons")
+        self.assertEqual(shown["action"], "show_learning")
+        removed = self.core.handle("forget lesson: Prefer small examples.")
+        self.assertEqual(removed["action"], "forget_learning")
+        self.assertEqual(removed["learning"], [])
+
     def test_forget_one_and_all(self):
         self.core.handle("remember that use simple examples")
         self.core.handle("forget: use simple examples")
