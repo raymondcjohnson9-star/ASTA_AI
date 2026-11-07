@@ -16,8 +16,13 @@ TOPIC_TERMS = {
 def build_personal_brief(memory_items, conversation_items, limit=5):
     """Return grounded themes, active project mentions and recent activity."""
     memories = [str(x).strip() for x in (memory_items or []) if str(x).strip()]
-    turns = [x for x in (conversation_items or []) if isinstance(x, dict)
-             and x.get("role") == "user" and isinstance(x.get("content"), str)]
+    turns = [
+        x for x in (conversation_items or [])
+        if isinstance(x, dict)
+        and x.get("role") == "user"
+        and isinstance(x.get("content"), str)
+        and x["content"].strip()
+    ]
     recent = turns[-100:]
     corpus = " ".join(memories + [x["content"] for x in recent]).casefold()
     themes = []
