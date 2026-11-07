@@ -21,10 +21,10 @@ from reasoning_engine import analyze_request, format_analysis
 from conversation_archive import ConversationArchive, extract_memory_candidates
 
 class AssistantCore:
-    def __init__(self, memory_path=None, lessons_path=None, language_engine=None, learning_path=None):
+    def __init__(self, memory_path=None, lessons_path=None, language_engine=None, learning_path=None, conversation_path=None):
         self.memory = UserMemory(memory_path or os.getenv("ASTA_MEMORY_PATH", ROOT / "models" / "user_memory.json"))
         self.learning = LearningStore(learning_path or os.getenv("ASTA_LEARNING_PATH", ROOT / "models" / "approved_learning.json"))
-        self.archive = ConversationArchive(os.getenv("ASTA_CONVERSATION_PATH", ROOT / "models" / "conversation_history.json"))
+        self.archive = ConversationArchive(conversation_path or os.getenv("ASTA_CONVERSATION_PATH", ROOT / "models" / "conversation_history.json"))
         self.lessons_path = Path(lessons_path or ROOT / "datasets" / "python_lessons.json")
         self.current_lesson = None
         self.language_engine = language_engine or LanguageEngine.from_environment()
