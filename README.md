@@ -372,3 +372,45 @@ The authenticated API now exposes `GET /api/memory` to retrieve the two user-con
 ASTA does not silently study all conversations or users' habits. The teaching store is an approved-example library, not autonomous model training. A connected language model can use those examples as context; without a configured model, they are saved but do not make the deterministic fallback more intelligent. Actual weight training, evaluation data, and safe model updates remain future work.
 
 Tests have been added for atomic-memory behavior, persistence across assistant instances, and explicit learning commands. They have **not** been run in this phase. GitHub Actions and APK builds remain manual-only and were not started.
+
+
+## Intelligence development — phase 3: automatic memory and app-use insights
+
+ASTA's memory behavior now moves beyond manual save commands:
+
+- Ordinary user and assistant chat turns are automatically archived in a local JSON conversation history.
+- The archive keeps up to 10,000 entries and applies a 180-day retention window when new turns are added.
+- Obvious credential patterns such as `api_key=...`, `password=...`, and common token formats are redacted before archival. This is a best-effort filter, not a guarantee that every sensitive detail is detected.
+- ASTA automatically promotes a small set of clear preference and goal statements (for example, "I prefer...", "my goal is...", and "I'm working on...") into its memory list.
+- Recent archived conversation turns are reloaded as context for a configured language model after a server restart.
+- Use `show conversation history` to inspect recent saved turns and `clear conversation history` to clear the archive. Existing memory commands remain available.
+
+Configure storage on a persistent, private server volume:
+
+```bash
+export ASTA_MEMORY_PATH=/var/lib/asta/user_memory.json
+export ASTA_LEARNING_PATH=/var/lib/asta/approved_learning.json
+export ASTA_CONVERSATION_PATH=/var/lib/asta/conversation_history.json
+```
+
+**Important:** this prototype has one shared assistant profile. Do not expose it to multiple unrelated users until authentication is upgraded to isolate each person's memories and conversation archive. A persistent disk must be mounted by the host; local container files can disappear. Never use this archive as a password vault.
+
+### Android app-use observation
+
+The Android client now includes an optional **APP-USE LEARNING** panel. It can request Android's special Usage Access setting and read aggregate foreground time for the previous seven days using `UsageStatsManager`.
+
+- The user must enable Usage Access in Android Settings.
+- The first implementation reads app package identifiers and total foreground time only.
+- It does not read notifications, messages, keystrokes, passwords, or screen contents.
+- App-usage totals are displayed locally and are not sent to the ASTA server.
+- This is an observation foundation, not yet a background habit-learning engine or an automatic recommendation system.
+
+The user can leave Usage Access disabled. Android may present a warning because Usage Access is a sensitive special permission. ASTA should explain the reason before sending the user to Settings.
+
+### Current limits and next integration work
+
+- Automatic memory extraction is heuristic and only recognizes a few explicit preference/goal sentence patterns; it does not understand or safely retain every fact yet.
+- The full chat archive is retained for up to 180 days by default. Users can clear it, and a future settings screen should let them adjust retention and pause archiving.
+- App usage is not transmitted to the backend. A later feature should ask separately before sharing selected aggregate insights with ASTA.
+- The Android permission flow and Kotlin code have not been build-tested.
+- Python tests have been added/updated but have not been run. GitHub Actions and APK builds remain paused and manual-only.
