@@ -58,6 +58,7 @@ private fun AstaApp() {
     var busy by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(true) }
     var status by remember { mutableStateOf("Connect your ASTA server to begin") }
+    var workspaceTitle by remember { mutableStateOf("Conversation") }
     val messages = remember { mutableStateListOf(ChatMessage("Hello. I'm ASTA. Connect to your server and send me a message.", false)) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -83,6 +84,23 @@ private fun AstaApp() {
                 Box(Modifier.size(8.dp).background(if (status.startsWith("Connected")) Teal else Muted, CircleShape))
                 Spacer(Modifier.width(8.dp))
                 Text(status, color = Muted, fontSize = 12.sp)
+            }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Panel),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(Modifier.size(7.dp).background(Teal, CircleShape))
+                    Spacer(Modifier.width(9.dp))
+                    Column {
+                        Text("ACTIVE WORKSPACE", color = Muted, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        Text(workspaceTitle, color = Teal, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
             if (showSettings) {
                 Spacer(Modifier.height(12.dp))
@@ -153,6 +171,7 @@ private fun AstaApp() {
                                 val answer = sendMessage(endpoint, token, message)
                                 messages.add(ChatMessage(answer.first, false))
                                 status = answer.second
+                                workspaceTitle = answer.third
                                 busy = false
                                 listState.animateScrollToItem(messages.lastIndex)
                             }
@@ -174,6 +193,7 @@ private fun AstaApp() {
                             val answer = sendMessage(endpoint, token, message)
                             messages.add(ChatMessage(answer.first, false))
                             status = answer.second
+                            workspaceTitle = answer.third
                             busy = false
                             listState.animateScrollToItem(messages.lastIndex)
                         }
@@ -186,16 +206,16 @@ private fun AstaApp() {
     }
 }
 
-private suspend fun sendMessage(base: String, token: String, message: String): Pair<String, String> =
+private suspend fun sendMessage(base: String, token: String, message: String): Triple<String, String, String> =
     withContext(Dispatchers.IO) {
-        if (base.isBlank() || token.isBlank()) return@withContext Pair(
-            "Open settings and enter your server address and private access token.", "Not connected"
+        if (base.isBlank() || token.isBlank()) return@withContext Triple(
+            "Open settings and enter your server address and private access token.", "Not connected", "Conversation"
         )
         var connection: HttpURLConnection? = null
         try {
             val root = base.trim().removeSuffix("/")
             if (!root.startsWith("https://")) {
-                return@withContext Pair("For safety, ASTA requires an HTTPS server address.", "HTTPS required")
+                return@withContext Triple("For safety, ASTA requires an HTTPS server address.", "HTTPS required", "Conversation")
             }
             connection = (URL("$root/api/chat").openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
@@ -212,12 +232,12 @@ private suspend fun sendMessage(base: String, token: String, message: String): P
             val raw = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
             val json = JSONObject(raw.ifBlank { "{}" })
             if (code in 200..299) {
-                Pair(json.optString("answer", "ASTA returned an empty response."), "Connected to ASTA server")
+                Triple(json.optString("answer", "ASTA returned an empty response."), "Connected to ASTA server", json.optJSONObject("workspace")?.optString("title", "Conversation") ?: "Conversation")
             } else {
-                Pair(json.optString("error", "Request failed ($code)."), "Server error: $code")
+                Triple(json.optString("error", "Request failed ($code)."), "Server error: $code", "Conversation")
             }
         } catch (e: Exception) {
-            Pair("I couldn't reach the ASTA server. Check the address, internet connection, and whether the server is running.", "Connection failed")
+            Triple("I couldn't reach the ASTA server. Check the address, internet connection, and whether the server is running.", "Connection failed", "Conversation")
         } finally {
             connection?.disconnect()
         }
