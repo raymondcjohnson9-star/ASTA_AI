@@ -43,7 +43,7 @@ object AppUsageObserver {
         val top = totals.first()
         val topMinutes = TimeUnit.MILLISECONDS.toMinutes(top.totalTimeInForeground)
         val share = if (totalMinutes > 0L) (topMinutes * 100L / totalMinutes) else 0L
-        val rows = totals.joinToString(separator = "\\n") {
+        val rows = totals.joinToString(separator = "\n") {
             val minutes = TimeUnit.MILLISECONDS.toMinutes(it.totalTimeInForeground)
             "${it.packageName}: ${minutes / 60}h ${minutes % 60}m"
         }
