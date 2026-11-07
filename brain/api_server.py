@@ -9,6 +9,7 @@ MAX_BODY_BYTES = 32_000
 CORE = AssistantCore(
     memory_path=os.getenv("ASTA_MEMORY_PATH", "models/user_memory.json"),
     learning_path=os.getenv("ASTA_LEARNING_PATH", "models/approved_learning.json"),
+    conversation_path=os.getenv("ASTA_CONVERSATION_PATH", "models/conversation_history.json"),
 )
 
 class AstaHandler(BaseHTTPRequestHandler):
@@ -38,7 +39,7 @@ class AstaHandler(BaseHTTPRequestHandler):
             if not self._authorized():
                 self._send(401, {"error": "Unauthorized."})
                 return
-            self._send(200, {"memory": CORE.memory.list(), "learning": CORE.learning.list()})
+            self._send(200, {"memory": CORE.memory.list(), "learning": CORE.learning.list(), "conversation_history": CORE.archive.list(limit=500)})
             return
         self._send(404, {"error": "Not found"})
 
@@ -69,6 +70,7 @@ class AstaHandler(BaseHTTPRequestHandler):
                 "sources": result.get("sources", []),
                 "memory": result.get("memory", []),
                 "learning": result.get("learning", []),
+                "conversation_history": result.get("conversation_history", []),
             })
         except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
             self._send(400, {"error": str(exc)})
