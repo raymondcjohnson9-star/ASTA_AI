@@ -173,6 +173,10 @@ private fun AstaApp() {
                             Text(if (briefLoading) "Preparing summary…" else "Review my personal intelligence")
                         }
                         Text(personalBrief, color = White, fontSize = 11.sp)
+                        Text(
+                            "Privacy controls in chat: 'show memory', 'forget: exact text', 'forget all memories', 'show conversation history', and 'clear conversation history'.",
+                            color = Muted, fontSize = 10.sp
+                        )
                     }
                 }
             }
