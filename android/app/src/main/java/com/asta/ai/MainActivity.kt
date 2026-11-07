@@ -1,6 +1,7 @@
 package com.asta.ai
 
 import android.os.Bundle
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -59,6 +60,9 @@ private fun AstaApp() {
     var showSettings by remember { mutableStateOf(true) }
     var status by remember { mutableStateOf("Connect your ASTA server to begin") }
     var workspaceTitle by remember { mutableStateOf("Conversation") }
+    val context = LocalContext.current
+    var usageSummary by remember { mutableStateOf("App usage is not connected. ASTA only reads aggregate app time after you grant access.") }
+    var usageAccess by remember { mutableStateOf(AppUsageObserver.hasUsageAccess(context)) }
     val messages = remember { mutableStateListOf(ChatMessage("Hello. I'm ASTA. Connect to your server and send me a message.", false)) }
     val scope = rememberCoroutineScope()
     val listState = rememberLazyListState()
@@ -123,6 +127,30 @@ private fun AstaApp() {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                         )
                         Text("Keep your token private. Use a trusted HTTPS server.", color = Muted, fontSize = 11.sp)
+                        Divider(color = Muted.copy(alpha = 0.25f))
+                        Text("APP-USE LEARNING", color = Teal, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "With your permission, ASTA can view aggregate time spent in apps over the last 7 days. It cannot read messages, passwords, or screen contents. These totals stay on this phone and are not sent to your ASTA server.",
+                            color = Muted, fontSize = 11.sp
+                        )
+                        Text(
+                            if (usageAccess) "Usage access: enabled" else "Usage access: not enabled",
+                            color = if (usageAccess) Teal else Muted, fontSize = 11.sp
+                        )
+                        Button(
+                            onClick = {
+                                usageAccess = AppUsageObserver.hasUsageAccess(context)
+                                if (!usageAccess) {
+                                    AppUsageObserver.openUsageAccessSettings(context)
+                                } else {
+                                    usageSummary = AppUsageObserver.weeklySummary(context)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (usageAccess) "Refresh 7-day app usage" else "Choose whether to allow app-usage access")
+                        }
+                        Text(usageSummary, color = White, fontSize = 11.sp)
                     }
                 }
             }
